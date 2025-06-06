@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponseDto> getUsersByFilter(UserRole role, String statusStr, StaffType staffType) {
+    public List<UserResponseDto> getUsersByFilter(UserRole role, Status status, StaffType staffType) {
         List<User> users = userRepository.findAll();
 
         // Lọc theo role nếu có
@@ -108,15 +108,10 @@ public class UserServiceImpl implements UserService {
         }
 
         // Lọc theo status nếu có
-        if (statusStr != null) {
-            try {
-                Status status = Status.valueOf(statusStr.toUpperCase());
-                users = users.stream()
-                        .filter(u -> u.getStatus() == status)
-                        .collect(Collectors.toList());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid status value");
-            }
+        if (status != null) {
+            users = users.stream()
+                    .filter(u -> u.getStatus() == status)
+                    .collect(Collectors.toList());
         }
 
         return users.stream()

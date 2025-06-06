@@ -19,7 +19,8 @@ public interface UserService {
 
     void deleteUser(Long id);
 
+
     UserResponseDto updateStatus(Long id, Status status);
 
-    List<UserResponseDto> getUsersByFilter(UserRole role, String status, StaffType staffType);
+    List<UserResponseDto> getUsersByFilter(UserRole role, Status status, StaffType staffType);
 }

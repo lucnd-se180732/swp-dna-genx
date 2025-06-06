@@ -4,6 +4,7 @@ package com.genx.controller;
 import com.genx.dto.UserRequestDto;
 import com.genx.dto.UserResponseDto;
 import com.genx.enums.StaffType;
+import com.genx.enums.Status;
 import com.genx.enums.UserRole;
 import com.genx.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class AdminUserController {
     @GetMapping("/users/filter")
     public ResponseEntity<List<UserResponseDto>> getUsersByFilter(
             @RequestParam(required = false) UserRole role,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Status status,
             @RequestParam(required = false) StaffType staffType
     ) {
         return ResponseEntity.ok(userService.getUsersByFilter(role, status, staffType));
