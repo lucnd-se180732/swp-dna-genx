@@ -2,6 +2,7 @@ package com.genx.service.impl;
 
 import com.genx.config.GoogleAuthConfig;
 import com.genx.config.JwtConfig;
+import com.genx.dto.request.GoogleUserRequest;
 import com.genx.dto.request.LoginRequest;
 import com.genx.dto.request.UserCreationRequest;
 import com.genx.dto.response.LoginResponse;
@@ -9,6 +10,7 @@ import com.genx.entity.RefreshToken;
 import com.genx.entity.User;
 import com.genx.enums.AuthProvider;
 import com.genx.enums.ERole;
+import com.genx.exception.CustomException;
 import com.genx.mapper.UserMapper;
 import com.genx.repository.IAuthRepository;
 import com.genx.repository.IRefreshTokenRepository;
@@ -29,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @Transactional(rollbackOn = Exception.class)
@@ -142,12 +145,36 @@ public class AuthServiceImpl implements IAuthService {
         jwtService.saveOrUpdateRefreshToken(user, refreshToken);
 
         return LoginResponse.builder()
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
     }
+    public void completeGoogleRegister(GoogleUserRequest request) {
+        Optional<User> optional = userRepository.findByEmail(request.getEmail());
+        if (optional.isEmpty()) {
+            throw new CustomException("Không tìm thấy tài khoản Google này", 400);
+        }
+
+        User user = optional.get();
+
+        // Kiểm tra xem đã hoàn tất chưa (tránh gọi lại)
+        if (user.getPhone() != null) {
+            throw new CustomException("Tài khoản đã được hoàn tất trước đó", 400);
+        }
+
+        // Cập nhật các thông tin bổ sung
+        user.setPhone(request.getPhone());
+        user.setFullName(request.getFullName());
+        user.setGender(request.getGender());
+
+        userRepository.save(user);
+    }
+
 
 
 

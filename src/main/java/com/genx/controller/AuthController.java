@@ -1,6 +1,7 @@
 package com.genx.controller;
 
 import com.genx.dto.request.GoogleLoginRequest;
+import com.genx.dto.request.GoogleUserRequest;
 import com.genx.dto.request.LoginRequest;
 import com.genx.dto.request.UserCreationRequest;
 import com.genx.dto.response.ApiResponse;
@@ -82,6 +83,19 @@ public class AuthController {
         response.addCookie(refreshCookie);
         return ResponseEntity.ok(loginResponse);
     }
+    @PostMapping("/google-register")
+    public ResponseEntity<ApiResponse<Boolean>> completeGoogleRegister(
+            @RequestBody @Valid GoogleUserRequest request
+    ) {
+        authService.completeGoogleRegister(request); // gọi hàm xử lý chính
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<Boolean>builder()
+                        .code(1000)
+                        .message("Đăng ký thành công. Vui lòng đăng nhập lại.")
+                        .result(true)
+                        .build());
+    }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(@CookieValue("refreshToken") String refreshToken) {

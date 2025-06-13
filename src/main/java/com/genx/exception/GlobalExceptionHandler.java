@@ -37,4 +37,16 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
+
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCustomException(CustomException ex) {
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(ApiResponse.builder()
+                        .code(ex.getStatusCode())
+                        .message(ex.getMessage())
+                        .result(null)
+                        .build());
+
+    }
 }
