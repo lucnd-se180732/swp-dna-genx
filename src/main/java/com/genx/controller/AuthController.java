@@ -8,6 +8,7 @@ import com.genx.dto.response.LoginResponse;
 import com.genx.service.impl.AuthServiceImpl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -27,7 +30,7 @@ public class AuthController {
     private int refreshTokenExpiration;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserCreationRequest request) {
+    public ResponseEntity<?> register(@RequestBody @Valid UserCreationRequest request) {
         return ResponseEntity.ok(authService.registerUser(request));
     }
 
@@ -40,7 +43,7 @@ public class AuthController {
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(true); // chỉ dùng HTTPS nếu bạn deploy thực tế
         refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(refreshTokenExpiration); // 7 ngày
+        refreshCookie.setMaxAge(refreshTokenExpiration / 1000); // 7 ngày
 
         response.addCookie(refreshCookie);
 
@@ -53,6 +56,17 @@ public class AuthController {
 //        LoginResponse response = authService.loginWithGoogle(code);
 //        return ResponseEntity.ok(response);
 //    }
+    @GetMapping("/callback")
+    public ResponseEntity<Void> googleCallback(@RequestParam("code") String code,
+                                               HttpServletResponse httpResponse) throws IOException, IOException {
+        LoginResponse response = authService.loginWithGoogle(code); // bước 2 và 3 dưới
+
+        // Redirect FE kèm access token
+        String redirectUrl = "http://localhost:3000/oauth2/success?access_token=" + response.getAccessToken();
+        httpResponse.sendRedirect(redirectUrl);
+        return ResponseEntity.ok().build();
+    }
+
 
     @PostMapping("/login-google")
     public ResponseEntity<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request, HttpServletResponse response) {
@@ -75,39 +89,30 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-   @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Boolean>> logout() {
-        try {
-            authService.logout();
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Boolean>> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken
+    ) {
+        authService.logout(refreshToken);
 
-            // Tạo cookie xóa refresh token trên client
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                    .httpOnly(true)
-                    .secure(true)  // dev có thể chỉnh thành false nếu local
-                    .path("/")
-                    .maxAge(0)
-                    .build();
+        // Xóa cookie refresh token
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
 
-            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
-                    .code(1000)
-                    .message("Đăng xuất thành công")
-                    .result(null)
-                    .build();
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(response);
-        } catch (RuntimeException e) {
-            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
-                    .code(1000)
-                    .message(e.getMessage())
-                    .result(null)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(response);
-        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.<Boolean>builder()
+                        .code(1000)
+                        .message("Đăng xuất thành công")
+                        .result(true)
+                        .build());
     }
+
+
 
 
 

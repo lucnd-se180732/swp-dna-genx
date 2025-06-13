@@ -10,5 +10,9 @@ public interface IAuthService {
     LoginResponse login(LoginRequest request);
     LoginResponse loginWithGoogle(String code);
     LoginResponse refreshAccessToken(String refreshToken);
-    void logout();
+    //void logout();
+
+    void logout(String refreshTokenFromCookie);
+
+   // void logoutByRefreshToken(String refreshToken);
 }

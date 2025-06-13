@@ -29,14 +29,14 @@ package com.genx.service;
         private IRefreshTokenRepository refreshTokenRepository;
 
 
-        public String generateToken(String email, String role) {
+        public String generateToken(String username, String role) {
             Date now = new Date();
             Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
 
             SecretKey key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
 
             return Jwts.builder()
-                    .setSubject(email)
+                    .setSubject(username)
                     .claim("role", role)
                     .setIssuedAt(now)
                     .setExpiration(expiryDate)
@@ -77,14 +77,14 @@ package com.genx.service;
                     .get("role", String.class);
         }
 
-        public String generateRefreshToken(String email, String role) {
+        public String generateRefreshToken(String username, String role) {
             Date now = new Date();
             Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshExpiration()); // ví dụ: 30 ngày
 
             SecretKey key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
 
             return Jwts.builder()
-                    .setSubject(email)
+                    .setSubject(username)
                     .claim("role", role)
                     .setIssuedAt(now)
                     .setExpiration(expiryDate)
@@ -115,7 +115,7 @@ package com.genx.service;
         }
 
     public RefreshToken createRefreshToken(User user) {
-        String tokenStr = generateRefreshToken(user.getEmail(), user.getRole().name());
+        String tokenStr = generateRefreshToken(user.getUsername(), user.getRole().name());
         saveOrUpdateRefreshToken(user, tokenStr);
         return refreshTokenRepository.findByUser(user).orElseThrow(() ->
                 new RuntimeException("Không tìm thấy refresh token sau khi tạo"));

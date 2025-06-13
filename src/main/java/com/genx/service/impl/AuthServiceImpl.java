@@ -9,24 +9,26 @@ import com.genx.entity.RefreshToken;
 import com.genx.entity.User;
 import com.genx.enums.AuthProvider;
 import com.genx.enums.ERole;
+import com.genx.mapper.UserMapper;
 import com.genx.repository.IAuthRepository;
 import com.genx.repository.IRefreshTokenRepository;
-import com.genx.security.SecurityUtil;
+import com.genx.security.CustomUserDetails;
 import com.genx.service.JwtService;
 import com.genx.service.interfaces.IAuthService;
-import com.genx.service.interfaces.IUserService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 @Transactional(rollbackOn = Exception.class)
@@ -38,8 +40,8 @@ public class AuthServiceImpl implements IAuthService {
     @Autowired
     private IRefreshTokenRepository refreshTokenRepository;
 
-    @Autowired
-    private IUserService userService;
+//    @Autowired
+//    private IUserService userService;
 
     @Autowired
     private JwtService jwtService;
@@ -53,26 +55,23 @@ public class AuthServiceImpl implements IAuthService {
     @Autowired
     private GoogleAuthConfig googleAuthConfig;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Override
     public String registerUser(UserCreationRequest request) {
-        // Kiểm tra username đã tồn tại
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
 
-        // Nếu có email thì kiểm tra luôn email (có thể cho phép không có email)
         if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
-        User user = new User();
-        user.setEmail(request.getEmail()); // Có thể null
-        user.setUsername(request.getUsername());
+
+        User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(ERole.CUSTOMER);
-        user.setAuthProvider(AuthProvider.SYSTEM);
-        user.setEnabled(true);
-        user.setAccountNonLocked(true);
 
         userRepository.save(user);
         return "User registered successfully";
@@ -80,33 +79,17 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsernameOrEmail(request.getInput())
+        User user = userRepository.findByUsernameOrEmail(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
-        // Tạo access token
-        String accessToken = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        if (!user.isEnabled() || !user.isAccountNonLocked())
+            throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc bị khóa");
 
-        // Tạo refresh token
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail(), user.getRole().name());
-
-        // Lưu refresh token vào DB (xóa token cũ nếu có)
-        refreshTokenRepository.deleteByUser(user);
-        RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setUser(user);
-        newRefreshToken.setRefreshToken(refreshToken);
-        newRefreshToken.setExpiryDate(Instant.now().plusSeconds(jwtConfig.getRefreshExpiration() / 1000));
-        refreshTokenRepository.save(newRefreshToken);
-
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
+        return buildLoginResponse(user);
     }
 
 
@@ -124,101 +107,109 @@ public class AuthServiceImpl implements IAuthService {
             ).execute();
 
             GoogleIdToken idToken = tokenResponse.parseIdToken();
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            String email = payload.getEmail();
+            if (idToken == null) throw new RuntimeException("ID Token không hợp lệ");
 
-            User user = userRepository.findByEmail(email)
-                    .orElseGet(() -> {
-                        User newUser = new User();
-                        newUser.setEmail(email);
-                        newUser.setRole(ERole.CUSTOMER);
-                        newUser.setUsername(email.split("@")[0]);
-                        newUser.setPassword(null);
-                        newUser.setAuthProvider(AuthProvider.GOOGLE);
-                        newUser.setEnabled(true);
-                        newUser.setAccountNonLocked(true);
-                        return userRepository.save(newUser);
-                    });
+            String email = idToken.getPayload().getEmail();
 
-            if (!user.isEnabled()) throw new RuntimeException("User disabled");
-            if (!user.isAccountNonLocked()) throw new RuntimeException("User locked");
+            User user = userRepository.findByEmail(email).orElseGet(() -> {
+                User newUser = new User();
+                newUser.setEmail(email);
+                newUser.setUsername(email.split("@")[0]);
+                newUser.setRole(ERole.CUSTOMER);
+                newUser.setPassword(null);
+                newUser.setAuthProvider(AuthProvider.GOOGLE);
+                newUser.setEnabled(true);
+                newUser.setAccountNonLocked(true);
+                return userRepository.save(newUser);
+            });
+
+            if (!user.isEnabled() || !user.isAccountNonLocked())
+                throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
+
             if (user.getAuthProvider() != AuthProvider.GOOGLE)
-                throw new RuntimeException("Login bằng " + user.getAuthProvider());
+                throw new RuntimeException("Vui lòng đăng nhập bằng " + user.getAuthProvider());
 
-            String accessToken = jwtService.generateToken(user.getEmail(), user.getRole().name());
-            String refreshToken = jwtService.generateRefreshToken(user.getEmail(), user.getRole().name());
-
-            // Lưu refresh token (bạn cần tạo bảng `refresh_tokens` trước)
-            jwtService.saveOrUpdateRefreshToken(user, refreshToken);
-
-            return LoginResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .email(user.getEmail())
-                    .role(user.getRole().name())
-                    .build();
-           // return new LoginResponse(accessToken, refreshToken, user.getEmail(), user.getRole().name());
+            return buildLoginResponse(user);
 
         } catch (Exception e) {
-          //  e.printStackTrace();
             throw new RuntimeException("Google login failed", e);
         }
     }
 
-    @Override
-    public LoginResponse refreshAccessToken(String refreshToken) {
-        // Tìm refresh token trong DB
-        RefreshToken tokenInDb = refreshTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ"));
-
-        // Kiểm tra hạn sử dụng
-        if (jwtService.isRefreshTokenExpired(refreshToken)) {
-            throw new RuntimeException("Refresh token đã hết hạn");
-        }
-
-        User user = tokenInDb.getUser();
-
-        // Kiểm tra trạng thái tài khoản
-        if (!user.isEnabled() || !user.isAccountNonLocked()) {
-            throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc bị khóa");
-        }
-
-        // Tạo access token mới
-        String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole().name());
-
-        // Tạo refresh token mới (xoay vòng) và cập nhật DB
-       String newRefreshTokenStr = jwtService.generateRefreshToken(user.getEmail(), user.getRole().name());
-       jwtService.saveOrUpdateRefreshToken(user, newRefreshTokenStr);
-        RefreshToken newToken = jwtService.createRefreshToken(user);
+    private LoginResponse buildLoginResponse(User user) {
+        String accessToken = jwtService.generateToken(user.getUsername(), user.getRole().name());
+        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
+        jwtService.saveOrUpdateRefreshToken(user, refreshToken);
 
         return LoginResponse.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshTokenStr)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
     }
 
 
+
     @Override
-    public void logout() {
-        Optional<String> currentUsernameOpt = SecurityUtil.getCurrentUserLogin();
+    public LoginResponse refreshAccessToken(String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ"));
 
-        if (currentUsernameOpt.isEmpty()) {
-            throw new RuntimeException("User chưa đăng nhập");
-        }
+        if (jwtService.isRefreshTokenExpired(refreshToken))
+            throw new RuntimeException("Refresh token đã hết hạn");
 
-        String username = currentUsernameOpt.get();
-        User user = userService.findByUsernameOrEmail(username);
+        User user = token.getUser();
 
-        if (user == null) {
-            throw new RuntimeException("User không tồn tại");
-        }
+        if (!user.isEnabled() || !user.isAccountNonLocked())
+            throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
 
-        // Xóa refresh token của user khỏi DB
-        refreshTokenRepository.deleteByUserId((user.getId()));
-        }
+        return buildLoginResponse(user);
+//        String newAccessToken = jwtService.generateToken(user.getUsername(), user.getRole().name());
+//        String newRefreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
+//
+//        jwtService.saveOrUpdateRefreshToken(user, newRefreshToken);
+//
+//        return LoginResponse.builder()
+//                .accessToken(newAccessToken)
+//                .refreshToken(newRefreshToken)
+//                .email(user.getEmail())
+//                .role(user.getRole().name())
+//                .build();
     }
+
+
+
+    @Override
+    public void logout(String refreshTokenFromCookie) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+            Long userId = userDetails.getUser().getId();
+            refreshTokenRepository.deleteByUserId(userId);
+            SecurityContextHolder.clearContext();
+            return;
+        }
+
+
+        if (refreshTokenFromCookie != null && !refreshTokenFromCookie.isBlank()) {
+            Claims claims = jwtService.parseToken(refreshTokenFromCookie);
+            String email = claims.getSubject();
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+            refreshTokenRepository.deleteByUser(user);
+            return;
+        }
+
+        // Không xác định được người dùng
+        throw new RuntimeException("Không thể xác định người dùng để logout");
+    }
+
+
+}
 
 
 

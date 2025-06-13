@@ -18,7 +18,9 @@ public class UserServiceImpl implements IUserService {
     @Override
     public User findByUsernameOrEmail(String usernameOrEmail) {
     try {
-            return userRepository.findByUsernameOrEmail(usernameOrEmail)
+        System.out.println("🔍 Đang tìm user với username/email = " + usernameOrEmail);
+
+        return userRepository.findByUsernameOrEmail(usernameOrEmail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
         } catch (RuntimeException e) {
             // Log the exception if needed
