@@ -1,9 +1,9 @@
 package com.genx.enums;
 
-public enum UserRole {
+public enum ERole {
     ADMIN,
     CUSTOMER,
-    STAFF,
-    GUEST,
+    LAF_STAFF,
+    RECORD_STAFF,
 
 }

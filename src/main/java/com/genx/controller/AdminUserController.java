@@ -1,62 +1,52 @@
-
 package com.genx.controller;
 
 import com.genx.dto.UserRequestDto;
 import com.genx.dto.UserResponseDto;
-import com.genx.enums.StaffType;
-import com.genx.enums.Status;
-import com.genx.enums.UserRole;
-import com.genx.service.UserService;
+import com.genx.enums.ERole;
+import com.genx.service.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.genx.enums.Status.BANNED;
-
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminUserController {
 
-    private final UserService userService;
+    private final IUserService userService;
 
-    // Admin creates staff
     @PostMapping("/staff")
     public ResponseEntity<UserResponseDto> createStaff(@RequestBody UserRequestDto request) {
-        if (request.getRole() != UserRole.STAFF && request.getRole() != UserRole.ADMIN) {
+        if (request.getRole() != ERole.LAF_STAFF && request.getRole() != ERole.RECORD_STAFF && request.getRole() != ERole.ADMIN) {
             return ResponseEntity.badRequest().build();
         }
         UserResponseDto response = userService.createStaff(request);
         return ResponseEntity.ok(response);
     }
 
-    // Admin updates staff info
     @PutMapping("/staff/{id}")
     public ResponseEntity<UserResponseDto> updateStaff(@PathVariable Long id, @RequestBody UserRequestDto request) {
-        UserResponseDto response = userService.updateUser(id, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
-    // Admin bans a user (sets status to BANNED)
-    @PutMapping("/ban/{id}")
-    public ResponseEntity<UserResponseDto> banUser(@PathVariable Long id) {
-        UserResponseDto banned = userService.updateStatus(id, BANNED);
-        return ResponseEntity.ok(banned);
+    @PutMapping("/status/{id}")
+    public ResponseEntity<UserResponseDto> updateStatus(@PathVariable Long id,
+                                                        @RequestParam boolean enabled,
+                                                        @RequestParam boolean accountNonLocked) {
+        return ResponseEntity.ok(userService.updateUserStatus(id, enabled, accountNonLocked));
     }
 
-    // Admin gets all users (for viewing)
     @GetMapping("/users")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // Admin deletes STAFF only (not GUEST or CUSTOMER)
     @DeleteMapping("/staff/{id}")
     public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
         UserResponseDto user = userService.getUserById(id);
-        if (user.getRole() != UserRole.STAFF && user.getRole() != UserRole.ADMIN) {
+        if (user.getRole() != ERole.LAF_STAFF && user.getRole() != ERole.RECORD_STAFF && user.getRole() != ERole.ADMIN) {
             return ResponseEntity.status(403).build();
         }
         userService.deleteUser(id);
@@ -65,13 +55,9 @@ public class AdminUserController {
 
     @GetMapping("/users/filter")
     public ResponseEntity<List<UserResponseDto>> getUsersByFilter(
-            @RequestParam(required = false) UserRole role,
-            @RequestParam(required = false) Status status,
-            @RequestParam(required = false) StaffType staffType
-    ) {
-        return ResponseEntity.ok(userService.getUsersByFilter(role, status, staffType));
+            @RequestParam(required = false) ERole role,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(required = false) Boolean accountNonLocked) {
+        return ResponseEntity.ok(userService.getUsersByFilter(role, enabled, accountNonLocked));
     }
 }
-
-
-

@@ -1,9 +1,7 @@
 package com.genx.dto;
 
-import com.genx.enums.UserRole;
-import com.genx.enums.StaffType;
-import com.genx.enums.Status;
-
+import com.genx.enums.AuthProvider;
+import com.genx.enums.ERole;
 import lombok.*;
 
 @Getter
@@ -12,12 +10,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UserRequestDto {
+    private String fullName;
+    private String gender;
+    private String phone;
+    private String email;
     private String username;
     private String password;
-    private String email;
-    private String displayName;
-    private String avatar;
-    private UserRole role;
-    private StaffType staffType;
-    private Status status;
+    private ERole role;
+    private AuthProvider authProvider;
 }

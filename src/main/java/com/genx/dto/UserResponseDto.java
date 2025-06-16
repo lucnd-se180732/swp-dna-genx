@@ -1,8 +1,7 @@
 package com.genx.dto;
 
-import com.genx.enums.UserRole;
-import com.genx.enums.StaffType;
-import com.genx.enums.Status;
+import com.genx.enums.ERole;
+import com.genx.enums.AuthProvider;
 
 import lombok.*;
 
@@ -13,11 +12,13 @@ import lombok.*;
 @Builder
 public class UserResponseDto {
     private Long id;
-    private String username;
+    private String fullName;
+    private String gender;
+    private String phone;
     private String email;
-    private String displayName;
-    private String avatar;
-    private UserRole role;
-    private StaffType staffType;
-    private Status status;
+    private String username;
+    private ERole role;
+    private boolean enabled;
+    private boolean accountNonLocked;
+    private AuthProvider authProvider;
 }

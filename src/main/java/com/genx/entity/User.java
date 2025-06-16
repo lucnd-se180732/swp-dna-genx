@@ -1,51 +1,60 @@
 package com.genx.entity;
-import com.genx.enums.StaffType;
-import com.genx.enums.Status;
-import com.genx.enums.UserRole;
+
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.genx.enums.ERole;
+import com.genx.enums.AuthProvider;
 import jakarta.persistence.*;
-
 import lombok.*;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 
+
+@Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Entity
-@Table(name = "Users")
-public class User {
+public class User  {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username", nullable = false)
-    private String username;
+    @Column(name = "full_name", nullable = true)
+    private String fullName;
 
-    @Column(name = "password", nullable = false, length = 255)
-    private String password;
+    @Column(name = "gender", nullable = true)
+    private String gender;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "phone", unique = true, nullable = true)
+    private String phone;
+
+    @Column(unique = true, nullable = true)
     private String email;
 
-    @Column(name = "display_name", nullable = false, length = 100)
-    private String displayName;
-
-    @Column( length = 255)
-    private String avatar;
-
-    @Column(nullable = false, length = 50 )
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private ERole role;
 
-    @Column( length = 100)
-    @Enumerated(EnumType.STRING)
-    private StaffType staffType;
 
-    @Column(nullable = false, length = 100)
+    @Column(unique = true, nullable = false)
+    private String username;
+
+
+    @Column(nullable = true)
+    private String password;
+
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    @Column(name = "account_non_locked", nullable = false)
+    private boolean accountNonLocked = true;
+
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    @JsonProperty("authProvider")
+    private AuthProvider authProvider;
 
 }
