@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ServiceRepository extends JpaRepository<Services, Long> {
+public interface IServiceRepository extends JpaRepository<Services, Long> {
     Services findByName(String name);
 }

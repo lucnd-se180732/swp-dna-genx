@@ -1,83 +1,48 @@
 package com.genx.controller;
 
 
-import com.genx.dto.PaymentDTO;
 import com.genx.dto.RegistrationDTO;
-import com.genx.entity.Registration;
-import com.genx.enums.PaymentStatus;
-import com.genx.mapper.RegistrationMapper;
+import com.genx.enums.EPaymentStatus;
 import com.genx.service.RegistrationService;
-import com.genx.service.VNPayService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 
-@Controller
-@RequestMapping("/registrations")
+@RestController
+@RequestMapping("/api/registrations")
 @CrossOrigin(origins = "*")
 public class RegistrationController {
-
     @Autowired
     private RegistrationService registrationService;
 
-    @Autowired
-    private VNPayService vnPayService;
-
-    @Autowired
-    private RegistrationMapper registrationMapper;
-
-    @PostMapping("/register")
-    @ResponseBody
-    public ResponseEntity<?> register(@RequestBody RegistrationDTO registrationDTO,
-                                      HttpServletRequest request) {
-        try {
-            // Bước 1: Gán trạng thái UNPAID
-            registrationDTO.setPaymentStatus(PaymentStatus.UNPAID);
-
-            // Bước 2: Gọi service để tạo đơn đăng ký
-            RegistrationDTO savedRegistration = registrationService.createRegistration(registrationDTO);
-
-            // Bước 3: Lấy lại bản ghi registration đã có đầy đủ thông tin (bao gồm Service)
-            Registration registration = registrationService.getFullRegistrationById(savedRegistration.getId());
-
-            // Bước 4: Tạo link thanh toán
-            String paymentUrl = vnPayService.createPaymentUrl(registration, request.getRemoteAddr());
-
-            // Bước 5: Trả về kết quả cho client
-            Map<String, Object> response = new HashMap<>();
-            response.put("registrationId", savedRegistration.getId());
-            response.put("paymentUrl", paymentUrl);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+    @PostMapping("/register")  // Keeping original endpoint
+    public ResponseEntity<RegistrationDTO> createRegistration(@RequestBody RegistrationDTO registrationDTO) {
+        RegistrationDTO savedRegistration = registrationService.createRegistration(registrationDTO);
+        return ResponseEntity.ok(savedRegistration);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<RegistrationDTO> getRegistration(@PathVariable Long id) {
+        RegistrationDTO registration = registrationService.getRegistrationById(id);
+        return ResponseEntity.ok(registration);
+    }
 
-    @GetMapping("/payment-result")
-    public String paymentResult(HttpServletRequest request, Model model) {
-        Map<String, String> params = new HashMap<>();
-        request.getParameterMap().forEach((key, value) -> params.put(key, value[0]));
-
-        PaymentDTO paymentDTO = vnPayService.validatePayment(params);
-        String orderId = request.getParameter("vnp_TxnRef");
-
-        if (paymentDTO != null && "00".equals(paymentDTO.getResponseCode())) {
-            registrationService.updatePaymentStatus(orderId, PaymentStatus.PAID);
-            model.addAttribute("message", "Payment successful!");
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<RegistrationDTO> cancelRegistration(@PathVariable Long id) {
+        RegistrationDTO cancelledRegistration = registrationService.cancelRegistration(id);
+        return ResponseEntity.ok(cancelledRegistration);
+    }
+    @GetMapping
+    public ResponseEntity<List<RegistrationDTO>> getAllRegistrations(
+            @RequestParam(required = false) EPaymentStatus status) {
+        List<RegistrationDTO> registrations;
+        if (status != null) {
+            registrations = registrationService.getRegistrationsByStatus(status);
         } else {
-            registrationService.updatePaymentStatus(orderId, PaymentStatus.FAILED);
-            model.addAttribute("message", "Payment failed!");
+            registrations = registrationService.getAllRegistrations();
         }
-
-        return "payment-result";
+        return ResponseEntity.ok(registrations);
     }
 }

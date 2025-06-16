@@ -1,8 +1,9 @@
 package com.genx.dto;
 
-import com.genx.enums.PaymentStatus;
-import com.genx.enums.TypeOfService;
+import com.genx.enums.EPaymentStatus;
+import com.genx.enums.ETypeOfService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class RegistrationDTO {
@@ -11,12 +12,14 @@ public class RegistrationDTO {
     private String phoneNumber;
     private String address;
     private String email;
-    private TypeOfService typeOfService;
+    private ETypeOfService ETypeOfService;
     private String appointmentDate;
     private Integer numberOfParticipants;
-    private PaymentStatus paymentStatus;
+    private EPaymentStatus EPaymentStatus;
     private Long serviceId;  // Foreign key reference to Services table
     private List<ParticipantDTO> participants;
+    private LocalDateTime createdAt;
+
 
 
     public Long getId() {
@@ -59,12 +62,12 @@ public class RegistrationDTO {
         this.email = email;
     }
 
-    public TypeOfService getTypeOfService() {
-        return typeOfService;
+    public ETypeOfService getTypeOfService() {
+        return ETypeOfService;
     }
 
-    public void setTypeOfService(TypeOfService typeOfService) {
-        this.typeOfService = typeOfService;
+    public void setTypeOfService(ETypeOfService ETypeOfService) {
+        this.ETypeOfService = ETypeOfService;
     }
 
     public String getAppointmentDate() {
@@ -75,12 +78,12 @@ public class RegistrationDTO {
         this.appointmentDate = appointmentDate;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public EPaymentStatus getPaymentStatus() {
+        return EPaymentStatus;
     }
 
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setPaymentStatus(EPaymentStatus EPaymentStatus) {
+        this.EPaymentStatus = EPaymentStatus;
     }
 
     public Long getServiceId() {
@@ -106,4 +109,12 @@ public class RegistrationDTO {
     public void setNumberOfParticipants(Integer numberOfParticipants) {
         this.numberOfParticipants = numberOfParticipants;
     }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
 }

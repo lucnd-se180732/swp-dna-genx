@@ -11,10 +11,10 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>ThanhToanHoaDon</artifactId>
+    <artifactId>swp-dna-genx</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ThanhToanHoaDon</name>
-    <description>ThanhToanHoaDon</description>
+    <name>swp-dna-genx</name>
+    <description>swp-dna-genx</description>
 
     <properties>
         <java.version>21</java.version>

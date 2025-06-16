@@ -17,6 +17,7 @@ public interface RegistrationMapper {
     @Mapping(source = "appointmentDate", target = "appointmentDate")
     @Mapping(source = "participants", target = "participants")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
+    @Mapping(source = "createdAt", target = "createdAt")
     RegistrationDTO toDTO(Registration registration);
 
 
@@ -30,6 +31,7 @@ public interface RegistrationMapper {
     @Mapping(source = "appointmentDate", target = "appointmentDate")
     @Mapping(source = "participants", target = "participants")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
+    @Mapping(target = "createdAt", ignore = true)
     Registration toEntity(RegistrationDTO registrationDTO);
 
 }

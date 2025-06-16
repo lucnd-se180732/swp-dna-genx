@@ -1,5 +1,4 @@
 package com.genx.mapper;
-
 import com.genx.dto.ParticipantDTO;
 import com.genx.entity.Participant;
 import org.mapstruct.Mapper;

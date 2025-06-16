@@ -9,7 +9,6 @@ public class ParticipantDTO {
     private String issueDate;
     private String issuePlace;
     private String relationship;
-
     // Getters and setters
     public String getName() {
         return name;

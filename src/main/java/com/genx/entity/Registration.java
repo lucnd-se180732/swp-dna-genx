@@ -1,9 +1,9 @@
 package com.genx.entity;
 
-import com.genx.enums.PaymentStatus;
-import com.genx.enums.TypeOfService;
+import com.genx.enums.EPaymentStatus;
+import com.genx.enums.ETypeOfService;
 import jakarta.persistence.*;
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +14,6 @@ public class Registration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-
     @Column(name = "full_name")
     private String fullName;
 
@@ -32,6 +31,19 @@ public class Registration {
 
     @Column(name = "number_of_participants")
     private Integer numberOfParticipants;
+    public ETypeOfService getETypeOfService() {
+        return ETypeOfService;
+    }
+    public void setETypeOfService(ETypeOfService ETypeOfService) {
+        this.ETypeOfService = ETypeOfService;
+    }
+    public EPaymentStatus getEPaymentStatus() {
+        return EPaymentStatus;
+    }
+
+    public void setEPaymentStatus(EPaymentStatus EPaymentStatus) {
+        this.EPaymentStatus = EPaymentStatus;
+    }
 
     @ManyToOne
     @JoinColumn(name = "service_id")
@@ -39,15 +51,17 @@ public class Registration {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type_of_service")
-    private TypeOfService typeOfService;
+    private ETypeOfService ETypeOfService;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
-    private PaymentStatus paymentStatus;
+    private EPaymentStatus EPaymentStatus;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id")
     private Payment payment;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "registration", cascade = CascadeType.ALL)
     private List<Participant> participants = new ArrayList<>();
@@ -56,10 +70,14 @@ public class Registration {
     public Registration() {
     }
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
     // Constructor with fields
     public Registration(Long id, String fullName, String phoneNumber, String address,
                         String email, String appointmentDate, Services service,
-                        TypeOfService typeOfService, PaymentStatus paymentStatus,
+                        ETypeOfService ETypeOfService, EPaymentStatus EPaymentStatus,
                         Payment payment, Integer numberOfParticipants) {
         this.id = id;
         this.fullName = fullName;
@@ -68,8 +86,8 @@ public class Registration {
         this.email = email;
         this.appointmentDate = appointmentDate;
         this.service = service;
-        this.typeOfService = typeOfService;
-        this.paymentStatus = paymentStatus;
+        this.ETypeOfService = ETypeOfService;
+        this.EPaymentStatus = EPaymentStatus;
         this.payment = payment;
         this.numberOfParticipants = numberOfParticipants;
     }
@@ -133,20 +151,20 @@ public class Registration {
         this.service = service;
     }
 
-    public TypeOfService getTypeOfService() {
-        return typeOfService;
+    public ETypeOfService getTypeOfService() {
+        return ETypeOfService;
     }
 
-    public void setTypeOfService(TypeOfService typeOfService) {
-        this.typeOfService = typeOfService;
+    public void setTypeOfService(ETypeOfService ETypeOfService) {
+        this.ETypeOfService = ETypeOfService;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public EPaymentStatus getPaymentStatus() {
+        return EPaymentStatus;
     }
 
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setPaymentStatus(EPaymentStatus EPaymentStatus) {
+        this.EPaymentStatus = EPaymentStatus;
     }
 
     public Payment getPayment() {
@@ -189,5 +207,13 @@ public class Registration {
         participants.remove(participant);
         participant.setRegistration(null);
         this.numberOfParticipants = participants.size();
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
