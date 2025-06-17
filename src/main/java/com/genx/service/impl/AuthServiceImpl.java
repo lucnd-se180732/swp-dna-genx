@@ -8,7 +8,7 @@ import com.genx.dto.request.UserCreationRequest;
 import com.genx.dto.response.LoginResponse;
 import com.genx.entity.RefreshToken;
 import com.genx.entity.User;
-import com.genx.enums.AuthProvider;
+import com.genx.enums.EAuthProvider;
 import com.genx.enums.ERole;
 import com.genx.exception.CustomException;
 import com.genx.mapper.UserMapper;
@@ -120,7 +120,7 @@ public class AuthServiceImpl implements IAuthService {
                 newUser.setUsername(email.split("@")[0]);
                 newUser.setRole(ERole.CUSTOMER);
                 newUser.setPassword(null);
-                newUser.setAuthProvider(AuthProvider.GOOGLE);
+                newUser.setAuthProvider(EAuthProvider.GOOGLE);
                 newUser.setEnabled(true);
                 newUser.setAccountNonLocked(true);
                 return userRepository.save(newUser);
@@ -129,7 +129,7 @@ public class AuthServiceImpl implements IAuthService {
             if (!user.isEnabled() || !user.isAccountNonLocked())
                 throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
 
-            if (user.getAuthProvider() != AuthProvider.GOOGLE)
+            if (user.getAuthProvider() != EAuthProvider.GOOGLE)
                 throw new RuntimeException("Vui lòng đăng nhập bằng " + user.getAuthProvider());
 
             return buildLoginResponse(user);

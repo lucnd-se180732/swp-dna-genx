@@ -16,6 +16,5 @@ public class BookingRequest {
     private Long customerId;
     private Long recordStaffId;
     private Long serviceId;
-    private Long collectionOptionId;
     private List<ParticipantRequest> participants;
 }

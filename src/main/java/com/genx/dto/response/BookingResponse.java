@@ -23,7 +23,6 @@ public class BookingResponse {
     private Long serviceId;
     private String serviceName;
     private BigDecimal servicePrice;
-    private Long collectionOptionId;
     private String collectionOptionName;
     private EBookingStatus status;
     private String note;

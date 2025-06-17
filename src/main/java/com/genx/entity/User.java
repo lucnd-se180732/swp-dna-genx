@@ -31,8 +31,8 @@ public class User extends BaseEntity {
     //fullname
     private String fullName;
 
-    //gneder
-    private boolean gender;
+    //gender
+    private String gender;
 
     // Password có thể null nếu đăng nhập bằng Gmail OAuth2
     @Column(nullable = true)

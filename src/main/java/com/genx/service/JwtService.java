@@ -16,7 +16,6 @@ package com.genx.service;
     import java.nio.charset.StandardCharsets;
     import java.time.Instant;
     import java.util.Date;
-    import java.util.Optional;
 
 @Service
     @Transactional(rollbackOn = Exception.class)

@@ -22,8 +22,6 @@ public class Customer {
     @Column(nullable = true, length = 255)
     private String address;
 
-
-
     @Column(nullable = true, length = 255)
     private String avatar;
 
