@@ -1,0 +1,22 @@
+package com.genx.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+
+
+public class BlogDto {
+    private Long id;
+    private String title;
+    private String content;
+    private LocalDateTime createdAt;
+    private Long createdById;
+    private String createdByName;
+}
