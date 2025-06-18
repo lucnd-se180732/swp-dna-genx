@@ -44,7 +44,7 @@ public class ParticipantServiceImpl implements IParticipantService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên nhập kit")));
 
         // Tự động cập nhật sampleStatus theo hình thức thu mẫu
-        var method = participant.getBooking().getCollectionOption();
+        var method = participant.getBooking().getCollectionMethod();
         if (method == null) {
             throw new IllegalStateException("Không xác định được hình thức thu mẫu.");
         }

@@ -24,7 +24,7 @@ public class SampleCollection {
 
     @ManyToOne
     @JoinColumn(name = "collected_by")
-    private User collectedBy;
+    private StaffInfo collectedBy;
 
     private LocalDateTime collectedAt;
 

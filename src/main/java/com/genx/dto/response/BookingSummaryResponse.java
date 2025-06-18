@@ -2,6 +2,7 @@ package com.genx.dto.response;
 
 import com.genx.enums.EBookingStatus;
 import com.genx.enums.ECaseType;
+import com.genx.enums.ECollectionMethod;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,4 +19,5 @@ public class BookingSummaryResponse {
     private LocalDateTime createdAt;
     private EBookingStatus status;
     private ECaseType caseType;
+    private ECollectionMethod collectionMethod;
 }

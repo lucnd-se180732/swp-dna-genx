@@ -2,6 +2,7 @@ package com.genx.dto.response;
 
 
 import com.genx.enums.EBookingStatus;
+import com.genx.enums.ECollectionMethod;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,9 +24,9 @@ public class BookingResponse {
     private Long serviceId;
     private String serviceName;
     private BigDecimal servicePrice;
-    private String collectionOptionName;
     private EBookingStatus status;
     private String note;
     private LocalDateTime createdAt;
     private List<ParticipantResponse> participants;
+    private ECollectionMethod collectionMethod;
 }

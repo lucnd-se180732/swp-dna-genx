@@ -19,6 +19,7 @@ public class RefreshToken {
 
     @Id
     private Long id;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")

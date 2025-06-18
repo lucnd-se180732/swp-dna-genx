@@ -38,8 +38,8 @@ public class Booking extends BaseEntity{
     private Service service;
 
     @Enumerated(EnumType.STRING)
-    @JoinColumn(name = "option_collect")
-    private ECollectionMethod collectionOption;
+    @Column(name = "option_collect", nullable = false)
+    private ECollectionMethod collectionMethod;
 
     // Giả sử bạn chưa cần xử lý payment nên bỏ payment_id ở đây
     // Nếu cần thì thêm: private Payment payment;

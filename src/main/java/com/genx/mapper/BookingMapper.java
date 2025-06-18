@@ -15,8 +15,7 @@ public interface BookingMapper {
     @Mapping(target = "serviceId", source = "service.id")
     @Mapping(target = "serviceName", source = "service.name")
     @Mapping(target = "servicePrice", source = "service.price")
-//    @Mapping(target = "collectionOptionId", source = "collectionOption.id")
-//    @Mapping(target = "collectionOptionName", source = "collectionOption.name")
+    @Mapping(target = "collectionMethod", source = "collectionMethod")
     BookingResponse toResponse(Booking booking);
 
     // for booking summary

@@ -16,4 +16,5 @@ public class SwpDnaGenxApplication {
         SpringApplication.run(SwpDnaGenxApplication.class, args);
     }
 
+
 }
