@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 public class BookingRequest {
-    private Long id;
+
     private String fullName;
     private String phoneNumber;
     private String address;
