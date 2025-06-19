@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = "com.genx.repository")
+@EnableJpaRepositories(basePackages = "com.genx")
 @EntityScan(basePackages = "com.genx")
 public class SwpDnaGenxApplication {
 

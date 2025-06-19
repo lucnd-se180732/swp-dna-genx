@@ -18,7 +18,7 @@ public class Participant {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "booking_id")
+    @JoinColumn(name = "id_booking", nullable = false)
     private Booking booking;
 
     @Column(nullable = false, length = 100)
@@ -41,12 +41,12 @@ public class Participant {
 
     @ManyToOne
     @JoinColumn(name = "kit_entered_by")
-    private User kitEnteredBy;
+    private StaffInfo kitEnteredBy;
 
     private LocalDateTime kitEnteredAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sample_status")
-    private EParticipantSampleStatus sampleStatus;
+    private EParticipantSampleStatus sampleStatus = EParticipantSampleStatus.PENDING;
 
 }

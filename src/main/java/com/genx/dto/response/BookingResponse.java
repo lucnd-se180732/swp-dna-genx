@@ -3,6 +3,7 @@ package com.genx.dto.response;
 
 import com.genx.enums.EBookingStatus;
 import com.genx.enums.ECollectionMethod;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 

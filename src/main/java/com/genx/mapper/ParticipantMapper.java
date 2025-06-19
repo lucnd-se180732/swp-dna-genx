@@ -10,6 +10,6 @@ import org.mapstruct.Mapping;
 public interface ParticipantMapper {
     Participant toEntity(ParticipantRequest request);
 
-    @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.fullName")
+    @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.user.fullName")
     ParticipantResponse toResponse(Participant entity);
 }

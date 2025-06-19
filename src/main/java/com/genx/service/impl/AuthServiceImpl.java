@@ -147,7 +147,7 @@ public class AuthServiceImpl implements IAuthService {
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .fullName(user.getFullName())
-                .phone(user.getPhone())
+                .phone(user.getPhoneNumber())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
@@ -163,12 +163,12 @@ public class AuthServiceImpl implements IAuthService {
         User user = optional.get();
 
         // Kiểm tra xem đã hoàn tất chưa (tránh gọi lại)
-        if (user.getPhone() != null) {
+        if (user.getPhoneNumber() != null) {
             throw new CustomException("Tài khoản đã được hoàn tất trước đó", 400);
         }
 
         // Cập nhật các thông tin bổ sung
-        user.setPhone(request.getPhone());
+        user.setPhoneNumber(request.getPhone());
         user.setFullName(request.getFullName());
         user.setGender(request.getGender());
 

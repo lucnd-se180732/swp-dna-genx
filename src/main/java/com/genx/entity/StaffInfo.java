@@ -11,14 +11,14 @@ import lombok.Setter;
 public class StaffInfo {
 
     @Id
-    private Long id;  // Chính là id trong bảng User
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // ID riêng, không dùng chung với User
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id-staff", nullable = false, unique = true)
     private User user;
 
     @Lob
+    @Column(name = "fingerprint_data")
     private byte[] fingerprintData;
-
 }

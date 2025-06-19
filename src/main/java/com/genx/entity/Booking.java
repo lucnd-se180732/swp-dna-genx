@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "booking")
 @Getter
 @Setter
 public class Booking extends BaseEntity{
@@ -30,7 +30,7 @@ public class Booking extends BaseEntity{
     private Customer customer;
 
     @ManyToOne
-    @JoinColumn(name = "record_staff_id")
+    @JoinColumn(name = "id")
     private StaffInfo recordStaff; // hoặc RecordStaff nếu bạn có entity riêng
 
     @ManyToOne

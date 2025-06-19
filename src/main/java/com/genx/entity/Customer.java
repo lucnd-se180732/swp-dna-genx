@@ -8,23 +8,23 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Entity
-@Table(name = "customers")
+@Table(name = "customer")
 public class Customer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "id-customer", nullable = false, unique = true)
     private User user;
 
-    @Column(nullable = true, length = 255)
+    @Column(length = 255)
     private String address;
 
-    @Column(nullable = true, length = 255)
+    @Column(length = 255)
     private String avatar;
 
-    @Column(name = "dob", nullable = true)
+    @Column(name = "dob")
     private LocalDate dob;
 }

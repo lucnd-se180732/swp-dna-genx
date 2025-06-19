@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BookingSummaryResponse {
     private Long bookingId;
+    private String recordStaffName;
     private String registrantName;
     private String phoneNumber;
     private LocalDateTime createdAt;
