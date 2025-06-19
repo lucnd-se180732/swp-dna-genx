@@ -12,7 +12,7 @@ public interface UserMapper {
     @Mapping(target = "role", expression = "java(com.genx.enums.ERole.CUSTOMER)")
     @Mapping(target = "enabled", constant = "true")
     @Mapping(target = "accountNonLocked", constant = "true")
-    @Mapping(target = "authProvider", expression = "java(com.genx.enums.AuthProvider.SYSTEM)")
+    @Mapping(target = "authProvider", expression = "java(com.genx.enums.EAuthProvider.SYSTEM)")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

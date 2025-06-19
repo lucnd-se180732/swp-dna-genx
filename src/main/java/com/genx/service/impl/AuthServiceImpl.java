@@ -8,7 +8,7 @@ import com.genx.dto.request.UserCreationRequest;
 import com.genx.dto.response.LoginResponse;
 import com.genx.entity.RefreshToken;
 import com.genx.entity.User;
-import com.genx.enums.AuthProvider;
+import com.genx.enums.EAuthProvider;
 import com.genx.enums.ERole;
 import com.genx.exception.CustomException;
 import com.genx.mapper.UserMapper;
@@ -30,7 +30,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -120,7 +119,7 @@ public class AuthServiceImpl implements IAuthService {
                 newUser.setUsername(email.split("@")[0]);
                 newUser.setRole(ERole.CUSTOMER);
                 newUser.setPassword(null);
-                newUser.setAuthProvider(AuthProvider.GOOGLE);
+                newUser.setAuthProvider(EAuthProvider.GOOGLE);
                 newUser.setEnabled(true);
                 newUser.setAccountNonLocked(true);
                 return userRepository.save(newUser);
@@ -129,7 +128,7 @@ public class AuthServiceImpl implements IAuthService {
             if (!user.isEnabled() || !user.isAccountNonLocked())
                 throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
 
-            if (user.getAuthProvider() != AuthProvider.GOOGLE)
+            if (user.getAuthProvider() != EAuthProvider.GOOGLE)
                 throw new RuntimeException("Vui lòng đăng nhập bằng " + user.getAuthProvider());
 
             return buildLoginResponse(user);
@@ -147,7 +146,7 @@ public class AuthServiceImpl implements IAuthService {
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .fullName(user.getFullName())
-                .phone(user.getPhone())
+                .phone(user.getPhoneNumber())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
@@ -163,12 +162,12 @@ public class AuthServiceImpl implements IAuthService {
         User user = optional.get();
 
         // Kiểm tra xem đã hoàn tất chưa (tránh gọi lại)
-        if (user.getPhone() != null) {
+        if (user.getPhoneNumber() != null) {
             throw new CustomException("Tài khoản đã được hoàn tất trước đó", 400);
         }
 
         // Cập nhật các thông tin bổ sung
-        user.setPhone(request.getPhone());
+        user.setPhoneNumber(request.getPhone());
         user.setFullName(request.getFullName());
         user.setGender(request.getGender());
 
@@ -192,17 +191,6 @@ public class AuthServiceImpl implements IAuthService {
             throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
 
         return buildLoginResponse(user);
-//        String newAccessToken = jwtService.generateToken(user.getUsername(), user.getRole().name());
-//        String newRefreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
-//
-//        jwtService.saveOrUpdateRefreshToken(user, newRefreshToken);
-//
-//        return LoginResponse.builder()
-//                .accessToken(newAccessToken)
-//                .refreshToken(newRefreshToken)
-//                .email(user.getEmail())
-//                .role(user.getRole().name())
-//                .build();
     }
 
 

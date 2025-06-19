@@ -12,9 +12,9 @@ import lombok.*;
 @Builder
 public class GoogleUserRequest{
     @Email(message = "Email phải hợp lệ")
-    private String email; // lấy từ localStorage ở FE
+    private String email;
 
-    private String fullName; // có thể disabled từ Google info
+    private String fullName;
 
     @NotBlank(message = "Số điện thoại không được để trống")
     @Pattern(
