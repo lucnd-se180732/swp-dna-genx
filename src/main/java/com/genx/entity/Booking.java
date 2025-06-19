@@ -1,0 +1,49 @@
+package com.genx.entity;
+
+import com.genx.enums.EPaymentStatus;
+import com.genx.enums.ECollectionMethod;
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Entity
+@Builder
+@Table(name = "Booking")
+public class Booking extends BaseEntity {
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "appointment_date")
+    private String appointmentDate;
+
+    @Column(name = "number_of_participants")
+    private Integer numberOfParticipants;
+
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    private Service service;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "option_collect")
+    private ECollectionMethod collectionMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    private EPaymentStatus paymentStatus;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Participant> participants = new ArrayList<>();
+
+}

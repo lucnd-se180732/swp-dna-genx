@@ -1,20 +1,18 @@
 package com.genx.controller;
 
-import com.genx.dto.PaymentDTO;
-import com.genx.dto.RegistrationDTO;
+import com.genx.dto.response.PaymentResponse;
+import com.genx.dto.response.BookingResponse;
 import com.genx.entity.Payment;
-import com.genx.entity.Registration;
+import com.genx.entity.Booking;
 import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
-import com.genx.mapper.RegistrationMapper;
 import com.genx.repository.IPaymentRepository;
-import com.genx.service.RegistrationService;
+import com.genx.service.BookingService;
 import com.genx.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
@@ -28,24 +26,23 @@ public class PaymentController {
     @Autowired
     private PaymentMapper paymentMapper;
     @Autowired
-    private RegistrationService registrationService;
+    private BookingService bookingService;
 
     @PostMapping("/create-payment")  // Keeping original endpoint
-    public ResponseEntity<?> createPayment(@RequestBody RegistrationDTO registrationDTO,
-                                           HttpServletRequest request) {
+    public ResponseEntity<?> createPayment(@RequestBody BookingResponse bookingResponse, HttpServletRequest request) {
         try {
-            Registration registration = registrationService.getFullRegistrationById(registrationDTO.getId());
+            Booking booking = bookingService.getFullRegistrationById(bookingResponse.getId());
 
             // Check if registration can be paid
-            if (registration.getPaymentStatus() == EPaymentStatus.CANCELLED) {
+            if (booking.getPaymentStatus() == EPaymentStatus.CANCELLED) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Registration has been cancelled"));
+                        .body(Map.of("error", "Booking has been cancelled"));
             }
 
-            String paymentUrl = vnPayService.createPaymentUrl(registration, request.getRemoteAddr());
+            String paymentUrl = vnPayService.createPaymentUrl(booking, request.getRemoteAddr());
             return ResponseEntity.ok(Map.of(
                     "paymentUrl", paymentUrl,
-                    "registrationId", registrationDTO.getId()
+                    "registrationId", bookingResponse.getId()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -56,14 +53,14 @@ public class PaymentController {
     @GetMapping("/vnpay-return")  // Keeping original endpoint
     public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
         try {
-            PaymentDTO paymentDTO = vnPayService.validatePayment(params);
+            PaymentResponse paymentResponse = vnPayService.validatePayment(params);
             String orderId = params.get("vnp_TxnRef");
 
-            if (paymentDTO != null && "00".equals(paymentDTO.getResponseCode())) {
-                registrationService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
-                return ResponseEntity.ok(paymentDTO);
+            if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
+                bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
+                return ResponseEntity.ok(paymentResponse);
             } else {
-                registrationService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
+                bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Payment failed"));
             }

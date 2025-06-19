@@ -2,13 +2,13 @@ package com.genx.service;
 
 
 import com.genx.config.VNPayConfig;
-import com.genx.dto.PaymentDTO;
+import com.genx.dto.response.PaymentResponse;
+import com.genx.entity.Booking;
 import com.genx.entity.Payment;
-import com.genx.entity.Registration;
 import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
 import com.genx.repository.IPaymentRepository;
-import com.genx.repository.IRegistrationRepository;
+import com.genx.repository.IBookingRepository;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,40 +24,40 @@ import java.util.*;
 @Service
 public class VNPayService {
     private final VNPayConfig vnPayConfig;
-    private final IRegistrationRepository IRegistrationRepository;
+    private final IBookingRepository IBookingRepository;
     private final IPaymentRepository IPaymentRepository;
     private final PaymentMapper paymentMapper;
 
     @Autowired
     public VNPayService(VNPayConfig vnPayConfig,
-                        IRegistrationRepository IRegistrationRepository,
+                        IBookingRepository IBookingRepository,
                         IPaymentRepository IPaymentRepository,
                         PaymentMapper paymentMapper) {
         this.vnPayConfig = vnPayConfig;
-        this.IRegistrationRepository = IRegistrationRepository;
+        this.IBookingRepository = IBookingRepository;
         this.IPaymentRepository = IPaymentRepository;
         this.paymentMapper = paymentMapper;
     }
 
     @Transactional
-    public String createPaymentUrl(Registration registration, String ip) {
+    public String createPaymentUrl(Booking booking, String ip) {
         try {
             // 1. Basic validation
-            if (registration == null) {
-                throw new IllegalArgumentException("Registration cannot be null");
+            if (booking == null) {
+                throw new IllegalArgumentException("Booking cannot be null");
             }
             // 2. Calculate amount before any other operation
-            long amount = calculateAmount(registration);
+            long amount = calculateAmount(booking);
             // 3. Create and set payment with LocalDateTime
             Payment payment = new Payment();
             payment.setAmount((int)(amount/100));
             payment.setPayDate(LocalDateTime.now());  // Fixed: Use LocalDateTime instead of Date
-            registration.setPayment(payment);
-            //   registration.setPaymentStatus(EPaymentStatus.UNPAID);
-            Registration savedRegistration = IRegistrationRepository.save(registration);
-            //   System.out.println("Saved registration ID: " + savedRegistration.getId());
+            booking.setPayment(payment);
+            //   booking.setPaymentStatus(EPaymentStatus.UNPAID);
+            Booking savedBooking = IBookingRepository.save(booking);
+            //   System.out.println("Saved booking ID: " + savedBooking.getId());
 
-            Map<String, String> vnp_Params = buildVNPayParams(savedRegistration, amount, ip);
+            Map<String, String> vnp_Params = buildVNPayParams(savedBooking, amount, ip);
             String paymentUrl = buildPaymentUrl(vnp_Params);
             //   System.out.println("Generated payment URL: " + paymentUrl);
             return paymentUrl;
@@ -68,16 +68,16 @@ public class VNPayService {
         }
     }
 
-    private long calculateAmount(Registration registration) {
-        if (registration == null) {
-            throw new IllegalArgumentException("Registration cannot be null");
+    private long calculateAmount(Booking booking) {
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking cannot be null");
         }
-        Integer participants = registration.getNumberOfParticipants();
+        Integer participants = booking.getNumberOfParticipants();
         if (participants == null || participants < 1) {
             throw new IllegalArgumentException("Number of participants must be greater than 0");
         }
 
-        Double basePrice = registration.getService().getPrice();
+        Double basePrice = booking.getService().getPrice();
         if (basePrice == null || basePrice <= 0) {
             throw new IllegalArgumentException("Service price must be greater than 0");
         }
@@ -85,9 +85,9 @@ public class VNPayService {
         return Math.round(basePrice * participants * 100);
     }
 
-    private Map<String, String> buildVNPayParams(Registration registration, long amount, String ip) {
+    private Map<String, String> buildVNPayParams(Booking booking, long amount, String ip) {
         String createDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        String txnRef = String.valueOf(registration.getId());
+        String txnRef = String.valueOf(booking.getId());
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
@@ -141,7 +141,7 @@ public class VNPayService {
     }
 
     @Transactional
-    public PaymentDTO validatePayment(Map<String, String> params) {
+    public PaymentResponse validatePayment(Map<String, String> params) {
         try {
             String vnp_SecureHash = params.get("vnp_SecureHash");
             String vnp_TxnRef = params.get("vnp_TxnRef");
@@ -150,9 +150,9 @@ public class VNPayService {
                 return null;
             }
 
-            Registration registration = IRegistrationRepository.findById(Long.valueOf(vnp_TxnRef))
+            Booking booking = IBookingRepository.findById(Long.valueOf(vnp_TxnRef))
                     .orElse(null);
-            if (registration == null) {
+            if (booking == null) {
                 return null;
             }
 
@@ -161,7 +161,7 @@ public class VNPayService {
             Payment payment = createPayment(params);
             Payment savedPayment = IPaymentRepository.save(payment);
 
-            updateRegistrationStatus(registration, savedPayment, isValid);
+            updateRegistrationStatus(booking, savedPayment, isValid);
 
             return paymentMapper.toDTO(savedPayment);
         } catch (Exception e) {
@@ -213,9 +213,9 @@ public class VNPayService {
         String hashDataStr = hashData.substring(0, hashData.length() - 1);
         return HmacUtils.hmacSha512Hex(vnPayConfig.getHashSecret(), hashDataStr);
     }
-    private void updateRegistrationStatus(Registration registration, Payment payment, boolean isValid) {
-        registration.setPayment(payment);
-        registration.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
-        IRegistrationRepository.save(registration);
+    private void updateRegistrationStatus(Booking booking, Payment payment, boolean isValid) {
+        booking.setPayment(payment);
+        booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
+        IBookingRepository.save(booking);
     }
 }
