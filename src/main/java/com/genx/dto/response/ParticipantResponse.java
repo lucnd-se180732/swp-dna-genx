@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 public class ParticipantResponse {
     private Long id;
     private String fullName;
+    private String gender;
+    private String yearOfBirth;
     private String identityNumber;
+    private String issueDate;
+    private String issuePlace;
+    private String relationship;
     private String kitCode;
     private String kitEnteredByName;
     private LocalDateTime kitEnteredAt;

@@ -1,32 +1,25 @@
 package com.genx.dto.response;
 
-
+import com.genx.enums.EPaymentStatus;
 import com.genx.enums.EBookingStatus;
 import com.genx.enums.ECollectionMethod;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Getter
 @Setter
 public class BookingResponse {
-    private Long bookingId;
-    private String customerName;
+    private Long id;
     private String phoneNumber;
-    private String identityNumber;
-    private int numberOfParticipants;
-    private Long customerId;
-    private Long recordStaffId;
-    private String recordStaffName;
-    private Long serviceId;
-    private String serviceName;
-    private BigDecimal servicePrice;
+    private String email;
     private ECollectionMethod collectionMethod;
-    private EBookingStatus status;
-    private String note;
-    private LocalDateTime createdAt;
+    private String appointmentDate;
+    private Integer numberOfParticipants;
+    private EPaymentStatus paymentStatus;
+    private Long serviceId;
     private List<ParticipantResponse> participants;
+    private LocalDateTime createdAt;
+    private EBookingStatus status;
 }

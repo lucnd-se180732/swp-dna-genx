@@ -1,28 +1,35 @@
 package com.genx.entity;
 
 import com.genx.enums.EBookingStatus;
+import com.genx.enums.EPaymentStatus;
 import com.genx.enums.ECollectionMethod;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
-
-@Entity
-@Table(name = "booking")
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-public class Booking extends BaseEntity{
+@Entity
+@Builder
+@Table(name = "Booking")
+public class Booking extends BaseEntity {
 
 
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
+    @Column(name = "email")
+    private String email;
+    
     @Column(name = "identity_number", nullable = true, length = 100)
     private String identityNumber;
 
-    @Column(name = "number_of_participants", nullable = false)
+    @Column(name = "appointment_date")
+    private String appointmentDate;
+
+    @Column(name = "number_of_participants")
     private Integer numberOfParticipants;
 
     @ManyToOne(optional = false)
@@ -41,8 +48,13 @@ public class Booking extends BaseEntity{
     @Column(name = "option_collect", nullable = false)
     private ECollectionMethod collectionMethod;
 
-    // Giả sử bạn chưa cần xử lý payment nên bỏ payment_id ở đây
-    // Nếu cần thì thêm: private Payment payment;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    private EPaymentStatus paymentStatus;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -53,4 +65,5 @@ public class Booking extends BaseEntity{
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
+
 }
