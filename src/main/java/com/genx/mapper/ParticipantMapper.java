@@ -3,6 +3,7 @@ import com.genx.dto.response.ParticipantResponse;
 import com.genx.entity.Participant;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface ParticipantMapper {
@@ -13,6 +14,7 @@ public interface ParticipantMapper {
     @Mapping(source = "issueDate", target = "issueDate")
     @Mapping(source = "issuePlace", target = "issuePlace")
     @Mapping(source = "relationship", target = "relationship")
+    @Named("participantToDTO")
     ParticipantResponse toDTO(Participant participant);
 
     @Mapping(source = "fullName", target = "fullName")
@@ -23,6 +25,10 @@ public interface ParticipantMapper {
     @Mapping(source = "issuePlace", target = "issuePlace")
     @Mapping(source = "relationship", target = "relationship")
     Participant toEntity(ParticipantResponse participantResponse);
+
+
+
     @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.user.fullName")
+    @Named("participantToResponse")
     ParticipantResponse toResponse(Participant entity);
 }

@@ -14,9 +14,11 @@ public interface BookingMapper {
     @Mapping(source = "phoneNumber", target = "phoneNumber")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "appointmentDate", target = "appointmentDate")
-    @Mapping(source = "participants", target = "participants")
+    //@Mapping(source = "participants", target = "participants")
+    @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
     @Mapping(source = "booking.createdAt", target = "createdAt")
+    @Named("toDTO")
     BookingResponse toDTO(Booking booking);
 
     @Mapping(source = "serviceId", target = "service.id")
@@ -30,16 +32,18 @@ public interface BookingMapper {
     Booking toEntity(BookingRequest bookingRequest);
 
     // for boooking details
-    @Mapping(target = "bookingId", source = "id")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "customerName", source = "customer.user.fullName")
     @Mapping(target = "recordStaffName", source = "recordStaff.user.fullName")
     @Mapping(target = "serviceId", source = "service.id")
-    @Mapping(target = "serviceName", source = "service.name")
+    //@Mapping(target = "serviceName", source = "service.name")
     @Mapping(target = "servicePrice", source = "service.price")
     @Mapping(target = "collectionMethod", source = "collectionMethod")
+    @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
+    @Named("toResponse")
     BookingResponse toResponse(Booking booking);
 
     // for booking summary
-    @Mapping(target = "bookingId", source = "id")
+    @Mapping(target = "id", source = "id")
     BookingSummaryResponse toSummary(Booking booking);
 }

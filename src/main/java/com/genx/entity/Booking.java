@@ -58,7 +58,7 @@ public class Booking extends BaseEntity {
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private EBookingStatus status = EBookingStatus.CONFIRMED;
+    private EBookingStatus status = EBookingStatus.PENDING;
 
     @Column(name = "note", length = 500)
     private String note;

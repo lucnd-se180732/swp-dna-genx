@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class BookingSummaryResponse {
-    private Long bookingId;
+    private Long id;
     private String customerName;
     private String phoneNumber;
     private LocalDateTime createdAt;

@@ -12,8 +12,11 @@ import java.util.List;
 @Setter
 public class BookingResponse {
     private Long id;
+    private String customerName;
+    private String recordStaffName;
     private String phoneNumber;
     private String email;
+    private Double servicePrice;
     private ECollectionMethod collectionMethod;
     private String appointmentDate;
     private Integer numberOfParticipants;
