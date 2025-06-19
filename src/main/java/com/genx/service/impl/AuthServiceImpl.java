@@ -6,6 +6,7 @@ import com.genx.dto.request.GoogleUserRequest;
 import com.genx.dto.request.LoginRequest;
 import com.genx.dto.request.UserCreationRequest;
 import com.genx.dto.response.LoginResponse;
+import com.genx.entity.Customer;
 import com.genx.entity.RefreshToken;
 import com.genx.entity.User;
 import com.genx.enums.EAuthProvider;
@@ -13,6 +14,7 @@ import com.genx.enums.ERole;
 import com.genx.exception.CustomException;
 import com.genx.mapper.UserMapper;
 import com.genx.repository.IAuthRepository;
+import com.genx.repository.ICustomerRepository;
 import com.genx.repository.IRefreshTokenRepository;
 import com.genx.security.CustomUserDetails;
 import com.genx.service.JwtService;
@@ -52,6 +54,9 @@ public class AuthServiceImpl implements IAuthService {
     private JwtConfig jwtConfig;
 
     @Autowired
+    private ICustomerRepository customerRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -76,6 +81,10 @@ public class AuthServiceImpl implements IAuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
+        Customer customer = new Customer();
+        customer.setUser(user); // Hibernate sẽ gán luôn customer.id = savedUser.id
+        customerRepository.save(customer);
+
         return "User registered successfully";
     }
 

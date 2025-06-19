@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PaymentRequest {
-    private Long id;
+    private Long bookingId;
     private String orderId;
     private Integer amount;
     private String transactionNo;

@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ParticipantRequest {
-    private Long id;
+
     private String fullName;
     private String gender;
     private String yearOfBirth;

@@ -2,13 +2,14 @@ package com.genx.service;
 
 import com.genx.dto.request.BookingRequest;
 import com.genx.dto.response.BookingResponse;
-import com.genx.entity.Booking;
-import com.genx.entity.Payment;
-import com.genx.entity.Service;
+import com.genx.entity.*;
+import com.genx.enums.EBookingStatus;
 import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.BookingMapper;
 import com.genx.repository.IBookingRepository;
+import com.genx.repository.ICustomerRepository;
 import com.genx.repository.IServiceRepository;
+import com.genx.security.SecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,13 @@ import java.util.stream.Collectors;
 public class BookingService {
 
     @Autowired
-    private IBookingRepository IBookingRepository;
+    private IBookingRepository bookingRepository;
 
     @Autowired
-    private IServiceRepository IServiceRepository;
+    private IServiceRepository serviceRepository;
+
+    @Autowired
+    private ICustomerRepository customerRepository;
 
     @Autowired
     private VNPayService vnPayService;
@@ -43,7 +47,7 @@ public class BookingService {
                 throw new IllegalArgumentException("Number of participants must be greater than 0");
             }
 
-            Service service = IServiceRepository.findById(bookingRequest.getServiceId())
+            Service service = serviceRepository.findById(bookingRequest.getServiceId())
                     .orElseThrow(() -> new EntityNotFoundException("Service not found with id: " + bookingRequest.getServiceId()));
 
             Booking booking = bookingMapper.toEntity(bookingRequest);
@@ -68,7 +72,16 @@ public class BookingService {
             payment.setAmount((int) totalAmount);
             booking.setPayment(payment);
 
-            Booking savedBooking = IBookingRepository.save(booking);
+            User user = SecurityUtil.getCurrentUser()
+                    .orElseThrow(() -> new RuntimeException("Không có người dùng đăng nhập"));
+
+            Long userId = SecurityUtil.getCurrentUserId().orElseThrow();  // hàm tự viết hoặc lấy từ SecurityContext
+            Customer customer = customerRepository.findById(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy customer từ user"));
+
+            booking.setCustomer(customer);
+            booking.setStatus(EBookingStatus.PENDING);
+            Booking savedBooking = bookingRepository.save(booking);
             return bookingMapper.toDTO(savedBooking);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create registration: " + e.getMessage(), e);
@@ -76,30 +89,30 @@ public class BookingService {
     }
     @Transactional
     public BookingResponse updatePaymentStatus(String orderId, EPaymentStatus status) {
-        Booking booking = IBookingRepository.findById(Long.valueOf(orderId))
+        Booking booking = bookingRepository.findById(Long.valueOf(orderId))
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + orderId));
 
         booking.setPaymentStatus(status);
-        Booking updatedBooking = IBookingRepository.save(booking);
+        Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.toDTO(updatedBooking);
     }
 
     public BookingResponse findById(Long id) {
-        return IBookingRepository.findById(id)
+        return bookingRepository.findById(id)
                 .map(bookingMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + id));
     }
 
     @Transactional
     public void deleteRegistration(Long id) {
-        if (!IBookingRepository.existsById(id)) {
+        if (!bookingRepository.existsById(id)) {
             throw new EntityNotFoundException("Booking not found with id: " + id);
         }
-        IBookingRepository.deleteById(id);
+        bookingRepository.deleteById(id);
     }
     @Transactional
     public BookingResponse updateRegistration(Long id, BookingRequest bookingRequest) {
-        Booking existingBooking = IBookingRepository.findById(id)
+        Booking existingBooking = bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + id));
 
         if (existingBooking.getPaymentStatus() == EPaymentStatus.PAID) {
@@ -107,7 +120,7 @@ public class BookingService {
         }
 
         // Fetch the service first
-        Service service = IServiceRepository.findById(bookingRequest.getServiceId())
+        Service service = serviceRepository.findById(bookingRequest.getServiceId())
                 .orElseThrow(() -> new EntityNotFoundException("Service not found with id: " + bookingRequest.getServiceId()));
 
         Booking booking = bookingMapper.toEntity(bookingRequest);
@@ -115,29 +128,29 @@ public class BookingService {
         booking.setService(service);
         booking.setPayment(existingBooking.getPayment());
         booking.setPaymentStatus(existingBooking.getPaymentStatus());
-        Booking updatedBooking = IBookingRepository.save(booking);
+        Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.toDTO(updatedBooking);
     }
     // Trả về registration đã có service, payment, ... đầy đủ
     public Booking getFullRegistrationById(Long id) {
-        return IBookingRepository.findById(id)
+        return bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + id));
     }
 
     public BookingResponse getRegistrationById(Long id) {
-        Booking booking = IBookingRepository.findById(id)
+        Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         return bookingMapper.toDTO(booking); // đây là lúc dùng mapper đúng nghĩa
     }
     public BookingResponse cancelRegistration(Long id) {
-        Booking booking = IBookingRepository.findById(id)
+        Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found"));
 
         // Both field and setter name match exactly with entity
         booking.setPaymentStatus(EPaymentStatus.CANCELLED);
 
         try {
-            Booking saved = IBookingRepository.save(booking);
+            Booking saved = bookingRepository.save(booking);
             return bookingMapper.toDTO(saved);
         } catch (DataIntegrityViolationException e) {
             throw new IllegalStateException("Cannot cancel this booking. Invalid status transition.");
@@ -145,13 +158,13 @@ public class BookingService {
     }
 
     public List<BookingResponse> getRegistrationsByStatus(EPaymentStatus status) {
-        return IBookingRepository.findByPaymentStatus(status).stream()
+        return bookingRepository.findByPaymentStatus(status).stream()
                 .map(bookingMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     public List<BookingResponse> getAllRegistrations() {
-        return IBookingRepository.findAll()
+        return bookingRepository.findAll()
                 .stream()
                 .map(bookingMapper::toDTO)
                 .collect(Collectors.toList());

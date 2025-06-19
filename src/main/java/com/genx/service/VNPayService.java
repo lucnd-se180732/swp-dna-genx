@@ -161,6 +161,7 @@ public class VNPayService {
             Payment payment = createPayment(params);
             Payment savedPayment = IPaymentRepository.save(payment);
 
+
             updateRegistrationStatus(booking, savedPayment, isValid);
 
             return paymentMapper.toDTO(savedPayment);
@@ -190,8 +191,8 @@ public class VNPayService {
         String vnp_SecureHash = params.get("vnp_SecureHash");
         String calculatedHash = calculateSecureHash(params);
         String vnp_ResponseCode = params.get("vnp_ResponseCode");
-        String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
-
+       // String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
+        String vnp_TransactionStatus = params.getOrDefault("vnp_TransactionStatus", "00");
         return vnp_SecureHash.equals(calculatedHash) &&
                 "00".equals(vnp_ResponseCode) &&
                 "00".equals(vnp_TransactionStatus);

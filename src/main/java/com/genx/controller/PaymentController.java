@@ -11,13 +11,16 @@ import com.genx.service.BookingService;
 import com.genx.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vnpay")  // Keeping original VNPay endpoint
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class PaymentController {
     @Autowired
     private VNPayService vnPayService;
@@ -50,25 +53,44 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/vnpay-return")  // Keeping original endpoint
-    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
-        try {
-            PaymentResponse paymentResponse = vnPayService.validatePayment(params);
-            String orderId = params.get("vnp_TxnRef");
+   // @Value("${frontendUrl}")
+    private String frontendUrl = "http://localhost:3000"; // Default value, can be overridden in application.properties
 
-            if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
-                bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
-                return ResponseEntity.ok(paymentResponse);
-            } else {
-                bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Payment failed"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
-        }
+    @GetMapping("/vnpay-return")
+    public ResponseEntity<Void> paymentReturn(@RequestParam Map<String, String> params) {
+        String orderId = params.get("vnp_TxnRef");
+        PaymentResponse paymentResponse = vnPayService.validatePayment(params);
+
+        String redirectUrl = frontendUrl + "/payment-result?success=" +
+                ("00".equals(paymentResponse.getResponseCode())) +
+                "&orderId=" + orderId;
+
+        EPaymentStatus status = "00".equals(paymentResponse.getResponseCode()) ?
+                EPaymentStatus.PAID : EPaymentStatus.FAILED;
+        bookingService.updatePaymentStatus(orderId, status);
+
+        return ResponseEntity.status(302).location(URI.create(redirectUrl)).build();
     }
+
+//    @GetMapping("/vnpay-return")  // Keeping original endpoint
+//    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
+//        try {
+//            PaymentResponse paymentResponse = vnPayService.validatePayment(params);
+//            String orderId = params.get("vnp_TxnRef");
+//
+//            if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
+//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
+//                return ResponseEntity.ok(paymentResponse);
+//            } else {
+//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
+//                return ResponseEntity.badRequest()
+//                        .body(Map.of("error", "Payment failed"));
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest()
+//                    .body(Map.of("error", e.getMessage()));
+//        }
+//    }
 
     @GetMapping("/payment-status/{orderId}")  // Keeping original endpoint
     public ResponseEntity<?> getPaymentStatus(@PathVariable String orderId) {

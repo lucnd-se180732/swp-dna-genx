@@ -31,7 +31,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**","/api/registrations/register").permitAll() //
+                        .requestMatchers("/api/v1/auth/**","/api/vnpay/**","/**").permitAll() //
+                        .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/vnpay/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/recorder/**").hasRole("RECORDER_STAFF")
