@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 public interface SampleCollectionMapper {
 
     @Mapping(target = "collectionId", source = "id")
-    @Mapping(target = "bookingRegistrantName", source = "booking.registrantName")
-    @Mapping(target = "collectedByName", source = "collectedBy.fullName")
+    @Mapping(target = "bookingRegistrantName", source = "booking.customer.user.fullName")
+    @Mapping(target = "collectedByName", source = "collectedBy.user.fullName")
     SampleCollectionResponse toResponse(SampleCollection entity);
 }

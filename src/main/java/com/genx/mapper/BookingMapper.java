@@ -11,12 +11,12 @@ public interface BookingMapper {
 
     // for boooking details
     @Mapping(target = "bookingId", source = "id")
+    @Mapping(target = "customerName", source = "customer.user.fullName")
     @Mapping(target = "recordStaffName", source = "recordStaff.user.fullName")
-    @Mapping(target = "serviceId", source = "serviceType.id")
-    @Mapping(target = "serviceName", source = "serviceType.name")
-    @Mapping(target = "servicePrice", source = "serviceType.price")
-    @Mapping(target = "collectionOptionId", source = "collectionOption.id")
-    @Mapping(target = "collectionOptionName", source = "collectionOption.name")
+    @Mapping(target = "serviceId", source = "service.id")
+    @Mapping(target = "serviceName", source = "service.name")
+    @Mapping(target = "servicePrice", source = "service.price")
+    @Mapping(target = "collectionMethod", source = "collectionMethod")
     BookingResponse toResponse(Booking booking);
 
     // for booking summary

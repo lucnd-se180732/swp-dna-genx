@@ -7,10 +7,10 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "service_types")
+@Table(name = "service")
 @Getter
 @Setter
-public class ServiceType {
+public class Service {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

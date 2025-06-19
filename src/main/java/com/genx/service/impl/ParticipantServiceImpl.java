@@ -7,6 +7,7 @@ import com.genx.enums.EBookingStatus;
 import com.genx.enums.EParticipantSampleStatus;
 import com.genx.mapper.ParticipantMapper;
 import com.genx.repository.IParticipantRepository;
+import com.genx.repository.IStaffInfoRepository;
 import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ public class ParticipantServiceImpl implements IParticipantService {
     private IParticipantRepository participantRepository;
 
     @Autowired
-    private IUserRepository userRepository;
+    private IStaffInfoRepository staffInfoRepository;
 
     @Autowired
     private ParticipantMapper participantMapper;
@@ -40,11 +41,11 @@ public class ParticipantServiceImpl implements IParticipantService {
 
         participant.setKitCode(request.getKitCode());
         participant.setKitEnteredAt(LocalDateTime.now());
-        participant.setKitEnteredBy(userRepository.findById(fakeLoggedInUserId)
+        participant.setKitEnteredBy(staffInfoRepository.findById(fakeLoggedInUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên nhập kit")));
 
         // Tự động cập nhật sampleStatus theo hình thức thu mẫu
-        var method = participant.getBooking().getCollectionOption().getCollectionMethod();
+        var method = participant.getBooking().getCollectionMethod();
         if (method == null) {
             throw new IllegalStateException("Không xác định được hình thức thu mẫu.");
         }

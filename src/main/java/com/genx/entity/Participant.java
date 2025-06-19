@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "participants")
+@Table(name = "participant")
 @Getter
 @Setter
 public class Participant {
@@ -32,7 +32,7 @@ public class Participant {
 
     @ManyToOne
     @JoinColumn(name = "kit_entered_by")
-    private User kitEnteredBy;
+    private StaffInfo kitEnteredBy;
 
     private LocalDateTime kitEnteredAt;
 

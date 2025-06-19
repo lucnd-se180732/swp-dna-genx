@@ -14,8 +14,7 @@ public class StaffInfo {
     private Long id;  // Chính là id trong bảng User
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @Lob

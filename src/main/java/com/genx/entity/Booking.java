@@ -1,6 +1,7 @@
 package com.genx.entity;
 
 import com.genx.enums.EBookingStatus;
+import com.genx.enums.ECollectionMethod;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,14 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "booking")
 @Getter
 @Setter
 public class Booking extends BaseEntity{
 
-
-    @Column(name = "registrant_name", nullable = false)
-    private String registrantName;
 
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
@@ -37,11 +35,11 @@ public class Booking extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private ServiceType serviceType;
+    private Service service;
 
-    @ManyToOne
-    @JoinColumn(name = "option_collect")
-    private CollectionOption collectionOption;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "option_collect", nullable = false)
+    private ECollectionMethod collectionMethod;
 
     // Giả sử bạn chưa cần xử lý payment nên bỏ payment_id ở đây
     // Nếu cần thì thêm: private Payment payment;

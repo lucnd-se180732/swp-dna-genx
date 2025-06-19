@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BookingSummaryResponse {
     private Long bookingId;
-    private String registrantName;
+    private String customerName;
     private String phoneNumber;
     private LocalDateTime createdAt;
     private EBookingStatus status;
