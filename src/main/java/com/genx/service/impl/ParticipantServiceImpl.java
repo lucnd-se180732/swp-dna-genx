@@ -9,6 +9,7 @@ import com.genx.mapper.ParticipantMapper;
 import com.genx.repository.IParticipantRepository;
 import com.genx.repository.IStaffInfoRepository;
 import com.genx.repository.IUserRepository;
+import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.IParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,11 @@ public class ParticipantServiceImpl implements IParticipantService {
         if (participant.getBooking() == null || participant.getBooking().getStatus() != EBookingStatus.CONFIRMED) {
             throw new IllegalStateException("Không thể nhập mã kit vì booking chưa được xác nhận.");
         }
-        // TODO: sau này lấy từ người dùng đăng nhập
-        Long fakeLoggedInUserId = 1L;
+        if (participant.getKitCode() != null) {
+            throw new IllegalStateException("Mã kit đã được nhập trước đó.");
+        }
+        Long fakeLoggedInUserId = SecurityUtil.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
 
         participant.setKitCode(request.getKitCode());
         participant.setKitEnteredAt(LocalDateTime.now());

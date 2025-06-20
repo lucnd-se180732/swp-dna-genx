@@ -107,18 +107,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Boolean>> logout(
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
+        // Gọi service để xóa refresh token khỏi DB
         authService.logout(refreshToken);
 
-        // Xóa cookie refresh token
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+        // Tạo cookie rỗng để xóa refresh token khỏi trình duyệt
+        ResponseCookie clearedCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(0)
                 .build();
 
+        // Trả response chuẩn REST
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearedCookie.toString())
                 .body(ApiResponse.<Boolean>builder()
                         .code(1000)
                         .message("Đăng xuất thành công")

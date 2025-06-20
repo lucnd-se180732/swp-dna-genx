@@ -21,7 +21,7 @@ public class GoogleUserRequest{
             regexp = "^(03[2-9]|08[1-9]|09[0|1|3|4|6|7|8|9]|07[0|6|7|8|9]|086)\\d{7}$",
             message = "Số điện thoại không hợp lệ"
     )
-    private String phone;
+    private String phoneNumber;
 
-    private String gender;
+//    private String gender;
 }

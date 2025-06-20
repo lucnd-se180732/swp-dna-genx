@@ -11,7 +11,7 @@ import lombok.*;
 public class LoginResponse {
     private String username;
     private String fullName;
-    private String phone;
+    private String phoneNumber;
     private String accessToken;
     private String refreshToken;
     private String email;

@@ -13,6 +13,6 @@ public class PaymentResponse {
     private String transactionNo;
     private String responseCode;
     private LocalDateTime payDate;
-
+    private String paymentStatus;
     // Getters and setters
 }

@@ -8,6 +8,7 @@ import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.BookingMapper;
 import com.genx.repository.IBookingRepository;
 import com.genx.repository.ICustomerRepository;
+import com.genx.repository.IPaymentRepository;
 import com.genx.repository.IServiceRepository;
 import com.genx.security.SecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
@@ -34,14 +36,14 @@ public class BookingService {
     private VNPayService vnPayService;
 
     @Autowired
+    private IPaymentRepository paymentRepository;
+
+    @Autowired
     private BookingMapper bookingMapper;
 
     @Transactional
     public BookingResponse createRegistration(BookingRequest bookingRequest) {
         try {
-
-
-            // Validate number of participants
             Integer numParticipants = bookingRequest.getNumberOfParticipants();
             if (numParticipants == null || numParticipants < 1) {
                 throw new IllegalArgumentException("Number of participants must be greater than 0");
@@ -53,44 +55,43 @@ public class BookingService {
             Booking booking = bookingMapper.toEntity(bookingRequest);
             booking.setService(service);
             booking.setPaymentStatus(EPaymentStatus.UNPAID);
-            // Add price validation
-            System.out.println("Service ID: " + service.getId());
-            System.out.println("Service price: " + service.getPrice());
-            // Ensure number of participants is set
-            if (booking.getNumberOfParticipants() == null || booking.getNumberOfParticipants() < 1) {
-                booking.setNumberOfParticipants(numParticipants); // This should now work with int
-            }
-
-            // Set participants relationships if they exist
-            if (booking.getParticipants() != null) {
-                booking.getParticipants().forEach(participant -> participant.setBooking(booking));
-            }
-
-            // Calculate total amount based on numberOfParticipants
-            double totalAmount = service.getPrice() * booking.getNumberOfParticipants();
-            Payment payment = new Payment();
-            payment.setAmount((int) totalAmount);
-            booking.setPayment(payment);
+            booking.setStatus(EBookingStatus.PENDING);
 
             User user = SecurityUtil.getCurrentUser()
                     .orElseThrow(() -> new RuntimeException("Không có người dùng đăng nhập"));
-
-            Long userId = SecurityUtil.getCurrentUserId().orElseThrow();  // hàm tự viết hoặc lấy từ SecurityContext
             Customer customer = customerRepository.findById(user.getId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy customer từ user"));
-
             booking.setCustomer(customer);
-            booking.setStatus(EBookingStatus.PENDING);
+
+            // Gán booking cho các participants
+            if (booking.getParticipants() != null) {
+                booking.getParticipants().forEach(p -> p.setBooking(booking));
+            }
+
+            // B1: Lưu booking trước để có ID
             Booking savedBooking = bookingRepository.save(booking);
+
+            // B2: Tạo và lưu payment riêng
+            Payment payment = new Payment();
+            payment.setAmount(service.getPrice().intValue() * savedBooking.getNumberOfParticipants());
+            payment.setBooking(savedBooking); // Gán booking đã có ID
+            Payment savedPayment = paymentRepository.save(payment);
+
+            // B3: Gán lại payment vào booking nếu bạn dùng quan hệ 2 chiều
+            savedBooking.setPayment(savedPayment);
+            bookingRepository.save(savedBooking); // cập nhật lại booking
+
             return bookingMapper.toDTO(savedBooking);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create registration: " + e.getMessage(), e);
         }
     }
+
     @Transactional
     public BookingResponse updatePaymentStatus(String orderId, EPaymentStatus status) {
-        Booking booking = bookingRepository.findById(Long.valueOf(orderId))
+        Booking booking = bookingRepository.findByPaymentOrderId(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + orderId));
+
 
         booking.setPaymentStatus(status);
         Booking updatedBooking = bookingRepository.save(booking);
@@ -110,6 +111,7 @@ public class BookingService {
         }
         bookingRepository.deleteById(id);
     }
+
     @Transactional
     public BookingResponse updateRegistration(Long id, BookingRequest bookingRequest) {
         Booking existingBooking = bookingRepository.findById(id)
@@ -131,6 +133,7 @@ public class BookingService {
         Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.toDTO(updatedBooking);
     }
+
     // Trả về registration đã có service, payment, ... đầy đủ
     public Booking getFullRegistrationById(Long id) {
         return bookingRepository.findById(id)
@@ -142,6 +145,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         return bookingMapper.toDTO(booking); // đây là lúc dùng mapper đúng nghĩa
     }
+
     public BookingResponse cancelRegistration(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found"));
@@ -168,5 +172,9 @@ public class BookingService {
                 .stream()
                 .map(bookingMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public Optional<Booking> getBookingByPayment(Payment payment) {
+        return bookingRepository.findByPayment(payment);
     }
 }

@@ -155,7 +155,7 @@ public class AuthServiceImpl implements IAuthService {
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .fullName(user.getFullName())
-                .phone(user.getPhoneNumber())
+                .phoneNumber(user.getPhoneNumber())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
@@ -176,9 +176,8 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         // Cập nhật các thông tin bổ sung
-        user.setPhoneNumber(request.getPhone());
+        user.setPhoneNumber(request.getPhoneNumber());
         user.setFullName(request.getFullName());
-        user.setGender(request.getGender());
 
         userRepository.save(user);
     }
@@ -208,30 +207,44 @@ public class AuthServiceImpl implements IAuthService {
     public void logout(String refreshTokenFromCookie) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-
+        // Trường hợp logout khi đang đăng nhập (có session trong SecurityContext)
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
             Long userId = userDetails.getUser().getId();
-            refreshTokenRepository.deleteByUserId(userId);
+            int deleted = refreshTokenRepository.deleteByUserId(userId); // nên có return
             SecurityContextHolder.clearContext();
+
+            if (deleted == 0) {
+                throw new CustomException("Không tìm thấy token để xóa", 400);
+            }
+
             return;
         }
 
-
+        // Trường hợp không có session, nhưng có gửi refreshToken thủ công
         if (refreshTokenFromCookie != null && !refreshTokenFromCookie.isBlank()) {
-            Claims claims = jwtService.parseToken(refreshTokenFromCookie);
-            String email = claims.getSubject();
+            Claims claims;
+            try {
+                claims = jwtService.parseToken(refreshTokenFromCookie);
+            } catch (Exception e) {
+                throw new CustomException("Refresh token không hợp lệ", 400);
+            }
 
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+            String subject = claims.getSubject(); // có thể là username hoặc email
+            User user = userRepository.findByUsernameOrEmail(subject)
+                    .orElseThrow(() -> new CustomException("User không tồn tại", 404));
 
-            refreshTokenRepository.deleteByUser(user);
+            int deleted = refreshTokenRepository.deleteByUser(user);
+
+            if (deleted == 0) {
+                throw new CustomException("Refresh token đã bị thu hồi hoặc không tồn tại", 400);
+            }
+
             return;
         }
 
-        // Không xác định được người dùng
-        throw new RuntimeException("Không thể xác định người dùng để logout");
+        // Trường hợp không có cách nào xác định được người dùng
+        throw new CustomException("Không thể xác định người dùng để logout", 400);
     }
-
 
 }
 
