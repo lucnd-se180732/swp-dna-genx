@@ -1,7 +1,7 @@
 package com.genx.service.Impl;
 
-import com.genx.dto.UserRequestDto;
-import com.genx.dto.UserResponseDto;
+import com.genx.dto.request.UserRequestDto;
+import com.genx.dto.response.UserResponseDto;
 import com.genx.entity.User;
 import com.genx.enums.ERole;
 import com.genx.mapper.UserMapper;

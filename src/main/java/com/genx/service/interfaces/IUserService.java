@@ -1,7 +1,7 @@
 package com.genx.service.interfaces;
 
-import com.genx.dto.UserRequestDto;
-import com.genx.dto.UserResponseDto;
+import com.genx.dto.request.UserRequestDto;
+import com.genx.dto.response.UserResponseDto;
 import com.genx.enums.ERole;
 
 import java.util.List;

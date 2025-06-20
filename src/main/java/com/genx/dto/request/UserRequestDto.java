@@ -1,4 +1,4 @@
-package com.genx.dto;
+package com.genx.dto.request;
 
 import com.genx.enums.AuthProvider;
 import com.genx.enums.ERole;
