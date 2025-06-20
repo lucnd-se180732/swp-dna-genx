@@ -32,7 +32,7 @@ public class AdminAccountInitializer implements CommandLineRunner {
             admin.setEmail(email);
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole(ERole.ADMIN);
-            admin.setFullName("Admin Account");
+            admin.setFullName("DNA-GenX");
             admin.setEnabled(true);
             admin.setAccountNonLocked(true);
             admin.setAuthProvider(AuthProvider.LOCAL);
