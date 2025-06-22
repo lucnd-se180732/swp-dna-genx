@@ -18,11 +18,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Blog {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long blogId;
 
     private String title;
+
+    private String shortDescription;
+
+    private String thumbnailUrl;
+
+    private String slug;
 
     @Column(columnDefinition = "TEXT")
     private String content;

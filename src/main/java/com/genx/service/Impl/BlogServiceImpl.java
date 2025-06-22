@@ -1,6 +1,9 @@
 package com.genx.service.Impl;
 
-import com.genx.dto.BlogDto;
+
+
+import com.genx.dto.request.BlogRequestDto;
+import com.genx.dto.response.BlogResponseDto;
 import com.genx.entity.BlogRate.Blog;
 import com.genx.entity.User;
 import com.genx.mapper.BlogMapper;
@@ -8,6 +11,8 @@ import com.genx.repository.BlogRepository;
 import com.genx.repository.UserRepository;
 import com.genx.service.interfaces.IBlogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,23 +28,51 @@ public class BlogServiceImpl implements IBlogService {
     private final BlogMapper blogMapper;
 
     @Override
-    public BlogDto createBlog(BlogDto dto, Long userId) {
+    public BlogResponseDto createBlog(BlogRequestDto dto, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Blog blog = blogMapper.toEntity(dto);
-        blog.setBlogId(null); // để đảm bảo JPA tạo mới
         blog.setCreatedAt(LocalDateTime.now());
         blog.setCreatedBy(user);
 
-        return blogMapper.toDTO(blogRepository.save(blog));
+        return blogMapper.toResponseDto(blogRepository.save(blog));
     }
 
     @Override
-    public List<BlogDto> getAllBlogs() {
+    public List<BlogResponseDto> getAllBlogs() {
         return blogRepository.findAll().stream()
-                .map(blogMapper::toDTO)
+                .map(blogMapper::toResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public BlogResponseDto getBlogById(Long id) {
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog not found with id: " + id));
+        return blogMapper.toResponseDto(blog);
+    }
+
+
+    private String generateSlug(String title) {
+        return title == null ? null :
+                title.toLowerCase()
+                        .replaceAll("[^a-z0-9\\s]", "")
+                        .replaceAll("\\s+", "-");
+    }
+    @Override
+    public BlogResponseDto updateBlog(Long id, BlogRequestDto dto) {
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog not found"));
+
+        blog.setTitle(dto.getTitle());
+        blog.setShortDescription(dto.getShortDescription());
+        blog.setThumbnailUrl(dto.getThumbnailUrl());
+        blog.setContent(dto.getContent());
+        blog.setSlug(generateSlug(dto.getTitle()));
+        blog.setCreatedAt(LocalDateTime.now());
+
+        return blogMapper.toResponseDto(blogRepository.save(blog));
     }
 
     @Override
@@ -48,5 +81,11 @@ public class BlogServiceImpl implements IBlogService {
             throw new RuntimeException("Blog not found");
         }
         blogRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<BlogResponseDto> getAllBlogs(Pageable pageable) {
+        return blogRepository.findAll(pageable)
+                .map(blogMapper::toResponseDto);
     }
 }
