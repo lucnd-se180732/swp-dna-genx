@@ -5,17 +5,15 @@ import com.genx.enums.EPaymentStatus;
 import com.genx.enums.ECollectionMethod;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.ArrayList;
 import java.util.List;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Entity
 @Builder
-@Table(name = "booking")
+@Table(name = "Booking")
 public class Booking extends BaseEntity {
 
 
@@ -24,7 +22,7 @@ public class Booking extends BaseEntity {
 
     @Column(name = "email")
     private String email;
-
+    
     @Column(name = "identity_number", nullable = true, length = 100)
     private String identityNumber;
 
@@ -57,7 +55,6 @@ public class Booking extends BaseEntity {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id")
     private Payment payment;
-
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)

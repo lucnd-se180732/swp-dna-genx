@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**").hasRole("RECORDER_STAFF")
                         .requestMatchers("/lab/**").hasRole("LAB_STAFF")
+                        .requestMatchers("/api/adn-results/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -57,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://a841-1-54-116-215.ngrok-free.app"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://127.0.0.1:5500", "https://a841-1-54-116-215.ngrok-free.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

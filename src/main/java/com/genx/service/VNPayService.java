@@ -1,5 +1,6 @@
 package com.genx.service;
 
+
 import com.genx.config.VNPayConfig;
 import com.genx.dto.response.PaymentResponse;
 import com.genx.entity.Booking;
@@ -8,7 +9,6 @@ import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
 import com.genx.repository.IPaymentRepository;
 import com.genx.repository.IBookingRepository;
-import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,33 +42,25 @@ public class VNPayService {
     @Transactional
     public String createPaymentUrl(Booking booking, String ip) {
         try {
+            // 1. Basic validation
             if (booking == null) {
                 throw new IllegalArgumentException("Booking cannot be null");
             }
-            if (booking.getId() == null) {
-                booking = IBookingRepository.save(booking);
-            }
+            // 2. Calculate amount before any other operation
             long amount = calculateAmount(booking);
-
-            // Tạo mã giao dịch duy nhất cho mỗi lần thanh toán
-            String txnRef = booking.getId() + "_" + System.currentTimeMillis();
-
-            //Payment payment = new Payment();
-            Payment payment = booking.getPayment();
+            // 3. Create and set payment with LocalDateTime
+            Payment payment = new Payment();
             payment.setAmount((int)(amount/100));
-            payment.setPayDate(LocalDateTime.now());
-            payment.setOrderId(txnRef); // Lưu txnRef vào orderId để đối chiếu khi callback
-            payment.setBooking(booking);
-
-            payment = IPaymentRepository.save(payment);
-            // Gán lại vào booking (nếu quan hệ là hai chiều)
+            payment.setPayDate(LocalDateTime.now());  // Fixed: Use LocalDateTime instead of Date
             booking.setPayment(payment);
-            IBookingRepository.save(booking); // cập nhật lại
+            //   booking.setPaymentStatus(EPaymentStatus.UNPAID);
+            Booking savedBooking = IBookingRepository.save(booking);
+            //   System.out.println("Saved booking ID: " + savedBooking.getId());
 
-//            booking.setPayment(payment);
-//            Booking savedBooking = IBookingRepository.save(booking);
-            Map<String, String> vnp_Params = buildVNPayParams(booking, amount, ip, txnRef);
-            return buildPaymentUrl(vnp_Params);
+            Map<String, String> vnp_Params = buildVNPayParams(savedBooking, amount, ip);
+            String paymentUrl = buildPaymentUrl(vnp_Params);
+            //   System.out.println("Generated payment URL: " + paymentUrl);
+            return paymentUrl;
         } catch (Exception e) {
             System.err.println("Error creating payment URL: " + e.getMessage());
             e.printStackTrace();
@@ -93,24 +85,26 @@ public class VNPayService {
         return Math.round(basePrice * participants * 100);
     }
 
-    private Map<String, String> buildVNPayParams(Booking booking, long amount, String ip, String txnRef) {
+    private Map<String, String> buildVNPayParams(Booking booking, long amount, String ip) {
         String createDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String txnRef = String.valueOf(booking.getId());
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", vnPayConfig.getTmnCode());
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
-        vnp_Params.put("vnp_BankCode", "");
+        vnp_Params.put("vnp_BankCode", ""); // Optional
         vnp_Params.put("vnp_CreateDate", createDate);
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_IpAddr", ip);
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don xet nghiem:" + txnRef);
-        vnp_Params.put("vnp_OrderType", "other");
+        vnp_Params.put("vnp_OrderType", "other"); // Changed from billpayment
         vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
         vnp_Params.put("vnp_TxnRef", txnRef);
 
+        // Sort the parameters before signing
         return new TreeMap<>(vnp_Params);
     }
 
@@ -152,54 +146,22 @@ public class VNPayService {
             String vnp_SecureHash = params.get("vnp_SecureHash");
             String vnp_TxnRef = params.get("vnp_TxnRef");
 
-            if (vnp_SecureHash == null || vnp_TxnRef == null) return null;
-
-            // Tách bookingId
-            String[] refParts = vnp_TxnRef.split("_");
-            if (refParts.length != 2) return null;
-            Long bookingId = Long.valueOf(refParts[0]);
-
-            // Lấy booking
-            Booking booking = IBookingRepository.findById(bookingId).orElse(null);
-            if (booking == null) return null;
-
-            // Nếu đã tồn tại payment với orderId này → không insert lại
-            Optional<Payment> existing = IPaymentRepository.findByOrderId(vnp_TxnRef);
-            if (existing.isPresent()) {
-                Payment payment = existing.get();
-
-                boolean changed = false;
-                if (payment.getTransactionNo() == null && params.get("vnp_TransactionNo") != null) {
-                    payment.setTransactionNo(params.get("vnp_TransactionNo"));
-                    changed = true;
-                }
-                if (payment.getResponseCode() == null && params.get("vnp_ResponseCode") != null) {
-                    payment.setResponseCode(params.get("vnp_ResponseCode"));
-                    changed = true;
-                }
-                if (payment.getPayDate() == null && params.get("vnp_PayDate") != null) {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-                    payment.setPayDate(LocalDateTime.parse(params.get("vnp_PayDate"), formatter));
-                    changed = true;
-                }
-
-                if (changed) IPaymentRepository.save(payment);
-                return paymentMapper.toDTO(payment);
+            if (vnp_SecureHash == null || vnp_TxnRef == null) {
+                return null;
             }
 
-            // Xác thực chữ ký
+            Booking booking = IBookingRepository.findById(Long.valueOf(vnp_TxnRef))
+                    .orElse(null);
+            if (booking == null) {
+                return null;
+            }
+
             boolean isValid = validatePaymentResponse(params);
 
-            // Tạo và lưu payment mới
             Payment payment = createPayment(params);
-            payment.setOrderId(vnp_TxnRef);
-
             Payment savedPayment = IPaymentRepository.save(payment);
 
-            // Cập nhật booking
-            booking.setPayment(savedPayment);
-            booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
-            IBookingRepository.save(booking);
+            updateRegistrationStatus(booking, savedPayment, isValid);
 
             return paymentMapper.toDTO(savedPayment);
         } catch (Exception e) {
@@ -209,7 +171,6 @@ public class VNPayService {
     }
 
     private Payment createPayment(Map<String, String> params) {
-        System.out.println("VNPay callback params: " + params);
         Payment payment = new Payment();
         payment.setOrderId(params.get("vnp_TxnRef"));
         payment.setAmount(Integer.parseInt(params.getOrDefault("vnp_Amount", "0")) / 100);
@@ -226,45 +187,33 @@ public class VNPayService {
     }
 
     private boolean validatePaymentResponse(Map<String, String> params) {
-        System.out.println("VNPay callback received:");
-        params.forEach((k, v) -> System.out.println(k + " = " + v));
-
         String vnp_SecureHash = params.get("vnp_SecureHash");
         String calculatedHash = calculateSecureHash(params);
-
         String vnp_ResponseCode = params.get("vnp_ResponseCode");
         String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
 
-        boolean isSuccess = "00".equals(vnp_ResponseCode) &&
-                ("00".equals(vnp_TransactionStatus) || vnp_TransactionStatus == null);
-        System.out.println("Hash OK, Transaction Status OK? " + isSuccess);
-        return isSuccess;
-
+        return vnp_SecureHash.equals(calculatedHash) &&
+                "00".equals(vnp_ResponseCode) &&
+                "00".equals(vnp_TransactionStatus);
     }
 
     private String calculateSecureHash(Map<String, String> params) {
-        Map<String, String> sortedParams = new TreeMap<>(params);
-        sortedParams.remove("vnp_SecureHash");
-        sortedParams.remove("vnp_SecureHashType");
+        Map<String, String> validParams = new TreeMap<>(params);
+        validParams.remove("vnp_SecureHash");
+        validParams.remove("vnp_SecureHashType");
 
         StringBuilder hashData = new StringBuilder();
-        for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
+        for (Map.Entry<String, String> entry : validParams.entrySet()) {
             if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                hashData.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+                hashData.append(entry.getKey()).append("=")
+                        .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+                        .append("&");
             }
         }
-        // Xóa dấu & cuối cùng
-        hashData.setLength(hashData.length() - 1);
-
-        String rawData = hashData.toString();
-        System.out.println("Hash Raw Data: " + rawData);
-
-        return new HmacUtils(HmacAlgorithms.HMAC_SHA_512, vnPayConfig.getHashSecret())
-                .hmacHex(hashData.toString());
+        String hashDataStr = hashData.substring(0, hashData.length() - 1);
+        return HmacUtils.hmacSha512Hex(vnPayConfig.getHashSecret(), hashDataStr);
     }
-
     private void updateRegistrationStatus(Booking booking, Payment payment, boolean isValid) {
-       // payment.setBooking(booking);
         booking.setPayment(payment);
         booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
         IBookingRepository.save(booking);

@@ -11,11 +11,11 @@ import java.util.List;
 
 public interface IBookingService {
     Page<BookingResponse> getAllBookings(Pageable pageable);
-    Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, Pageable pageable);
+    Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long bookingId, Pageable pageable);
     BookingResponse getBookingById(Long id);
     BookingResponse confirmBooking(Long id);
     BookingResponse cancelBooking(Long id, String reason);
-    Page<BookingResponse> searchBookings(EBookingStatus status, Long id, Pageable pageable);
-   // BookingResponse enterKitCodes(Long id, List<KitCodeRequest> kitCodes);
+    Page<BookingResponse> searchBookings(EBookingStatus status, Long bookingId, Pageable pageable);
+   // BookingResponse enterKitCodes(Long bookingId, List<KitCodeRequest> kitCodes);
 
 }

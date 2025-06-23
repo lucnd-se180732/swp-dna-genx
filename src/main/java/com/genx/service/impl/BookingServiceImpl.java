@@ -32,8 +32,8 @@ package com.genx.service.impl;
         }
 
         @Override
-        public Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, Pageable pageable) {
-            return bookingRepository.searchByStatusAndBookingId(status, id, pageable)
+        public Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long bookingId, Pageable pageable) {
+            return bookingRepository.searchByStatusAndBookingId(status, bookingId, pageable)
                     .map(bookingMapper::toSummary);
         }
 
@@ -69,5 +69,8 @@ package com.genx.service.impl;
             return bookingRepository.searchByStatusAndBookingId(status, bookingId, pageable)
                     .map(bookingMapper::toResponse);
         }
+
+
+
 
     }

@@ -10,17 +10,14 @@ import com.genx.repository.IPaymentRepository;
 import com.genx.service.BookingService;
 import com.genx.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/vnpay")  // Keeping original VNPay endpoint
+@CrossOrigin(origins = "*")
 public class PaymentController {
     @Autowired
     private VNPayService vnPayService;
@@ -53,82 +50,35 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/vnpay-return")
-    public void paymentReturn(@RequestParam Map<String, String> params, HttpServletResponse response) {
-        System.out.println("🔥 Đã vào callback");
+    @GetMapping("/vnpay-return")  // Keeping original endpoint
+    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
         try {
-            String orderId = params.get("vnp_TxnRef");
-
             PaymentResponse paymentResponse = vnPayService.validatePayment(params);
+            String orderId = params.get("vnp_TxnRef");
 
             if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
                 bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
+                return ResponseEntity.ok(paymentResponse);
             } else {
                 bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Payment failed"));
             }
-            Thread.sleep(2000);
-            // 🔁 Redirect về FE và giữ nguyên các query params
-            String frontendRedirect = "https://a841-1-54-116-215.ngrok-free.app/payment-result";
-            String queryParams = params.entrySet().stream()
-                    .map(entry -> entry.getKey() + "=" + entry.getValue())
-                    .reduce((a, b) -> a + "&" + b)
-                    .orElse("");
-            response.sendRedirect(frontendRedirect + "?" + queryParams);
-
         } catch (Exception e) {
-            e.printStackTrace();
-            try {
-                response.sendRedirect("https://a841-1-54-116-215.ngrok-free.app/payment-result?error=1");
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-
-//    @GetMapping("/vnpay-return")  // Keeping original endpoint
-//    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
-//        System.out.println("🔥 Đã vào callback");
-//        try {
-//            PaymentResponse paymentResponse = vnPayService.validatePayment(params);
-//            String orderId = params.get("vnp_TxnRef");
-//
-//            if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
-//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
-//                return ResponseEntity.ok(paymentResponse);
-//            } else {
-//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
-//                return ResponseEntity.badRequest()
-//                        .body(Map.of("error", "Payment failed"));
-//            }
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest()
-//                    .body(Map.of("error", e.getMessage()));
-//        }
-//    }
-
-    @GetMapping("/payment-status/{orderId}")
+    @GetMapping("/payment-status/{orderId}")  // Keeping original endpoint
     public ResponseEntity<?> getPaymentStatus(@PathVariable String orderId) {
         try {
             Payment payment = paymentRepository.findByOrderId(orderId)
                     .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-            Booking booking = bookingService.getBookingByPayment(payment)
-                    .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-            PaymentResponse dto = paymentMapper.toDTO(payment);
-            dto.setPaymentStatus(booking.getPaymentStatus().name());
-
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(paymentMapper.toDTO(payment));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
-    }
-
-    @PostMapping("/payment-ipn")
-    public ResponseEntity<String> handleIPN(@RequestParam Map<String, String> params) {
-        PaymentResponse response = vnPayService.validatePayment(params);
-        return response != null ? ResponseEntity.ok("OK") : ResponseEntity.badRequest().body("INVALID");
     }
 }

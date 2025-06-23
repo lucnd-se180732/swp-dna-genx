@@ -1,7 +1,6 @@
 package com.genx.repository;
 
 import com.genx.entity.Booking;
-import com.genx.entity.Payment;
 import com.genx.enums.EPaymentStatus;
 import com.genx.enums.EBookingStatus;
 import org.springframework.data.domain.Page;
@@ -14,7 +13,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Repository
 public interface IBookingRepository extends JpaRepository<Booking, Long> {
@@ -30,10 +28,6 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
             @Param("bookingId") Long bookingId,
             Pageable pageable
     );
-
-    Optional<Booking> findByPayment(Payment payment);
-
-    Optional<Booking> findByPaymentOrderId(String orderId);
 
 
 }
