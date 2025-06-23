@@ -173,7 +173,8 @@ public class VNPayService {
                     payment.setTransactionNo(params.get("vnp_TransactionNo"));
                     changed = true;
                 }
-                if (payment.getResponseCode() == null && params.get("vnp_ResponseCode") != null) {
+                if (params.get("vnp_ResponseCode") != null &&
+                        !params.get("vnp_ResponseCode").equals(payment.getResponseCode())) {
                     payment.setResponseCode(params.get("vnp_ResponseCode"));
                     changed = true;
                 }

@@ -30,5 +30,6 @@ public interface ParticipantMapper {
 
     @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.user.fullName")
     @Named("participantToResponse")
+    @Mapping(target = "sampleStatus", source = "sampleStatus")
     ParticipantResponse toResponse(Participant entity);
 }

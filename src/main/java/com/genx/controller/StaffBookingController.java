@@ -28,6 +28,15 @@ public class StaffBookingController {
         return bookingService.searchBookingSummaries(status, bookingId, pageable);
     }
 
+    @GetMapping("/all")
+    public Page<BookingResponse> searchAllBookings(
+            @RequestParam(required = false) EBookingStatus status,
+            @RequestParam(required = false) Long bookingId,
+            Pageable pageable
+    ) {
+        return bookingService.searchBookings(status, bookingId, pageable);
+    }
+
     @GetMapping("/{id}")
     public BookingResponse getBookingById(@PathVariable Long id) {
         return bookingService.getBookingById(id);

@@ -31,11 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = extractToken(request);
+        System.out.println("🔍 JWT Filter triggered - path: " + path);
+        System.out.println("🔍 Token received: " + token);
 
         if (token != null && jwtService.validateToken(token)) {
-            String email = jwtService.getEmailFromToken(token);
-            CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(email);
-
+            String username = jwtService.getUsernameFromToken(token);
+            System.out.println("✅ JWT username: " + username);
+            CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+            System.out.println("✅ User role: " + userDetails.getUser().getRole());
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 

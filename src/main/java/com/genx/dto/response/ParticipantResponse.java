@@ -18,6 +18,7 @@ public class ParticipantResponse {
     private String issuePlace;
     private String relationship;
     private String kitCode;
+    private String sampleStatus;
     private String kitEnteredByName;
     private LocalDateTime kitEnteredAt;
 }

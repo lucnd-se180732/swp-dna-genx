@@ -18,8 +18,8 @@ public class SampleCollection {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "booking_id")
+    @OneToOne(optional = false)
+    @JoinColumn(name = "booking_id", unique = true)
     private Booking booking;
 
     @ManyToOne

@@ -1,8 +1,6 @@
 package com.genx.dto.response;
 
-import com.genx.enums.EPaymentStatus;
-import com.genx.enums.EBookingStatus;
-import com.genx.enums.ECollectionMethod;
+import com.genx.enums.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +10,7 @@ import java.util.List;
 @Setter
 public class BookingResponse {
     private Long id;
+    private String code;
     private String customerName;
     private String recordStaffName;
     private String phoneNumber;
@@ -22,7 +21,9 @@ public class BookingResponse {
     private Integer numberOfParticipants;
     private EPaymentStatus paymentStatus;
     private Long serviceId;
+    private String serviceTypeName;
     private List<ParticipantResponse> participants;
+    private ESampleCollectionStatus sampleCollectionStatus;
     private LocalDateTime createdAt;
     private EBookingStatus status;
 }

@@ -29,6 +29,23 @@ public class ParticipantServiceImpl implements IParticipantService {
     private ParticipantMapper participantMapper;
 
 
+
+    @Override
+    public ParticipantResponse sendKitToCustomer(Long participantId) {
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy participant"));
+
+        if (participant.getSampleStatus() != EParticipantSampleStatus.PENDING) {
+            throw new IllegalStateException("Không thể gửi kit ở trạng thái hiện tại");
+        }
+
+        participant.setSampleStatus(EParticipantSampleStatus.KIT_SENT);
+        participant.setKitEnteredAt(LocalDateTime.now());
+        return participantMapper.toResponse(participantRepository.save(participant));
+    }
+
+
+
     @Override
     public ParticipantResponse enterKitCode(Long participantId, KitCodeRequest request) {
         Participant participant = participantRepository.findById(participantId)

@@ -1,8 +1,10 @@
 package com.genx.service.impl;
 
+import com.genx.dto.response.SampleCollectionHistoryResponse;
 import com.genx.entity.SampleCollection;
 import com.genx.enums.EParticipantSampleStatus;
 import com.genx.enums.ESampleCollectionStatus;
+import com.genx.mapper.SampleCollectionMapper;
 import com.genx.repository.IParticipantRepository;
 import com.genx.repository.ISampleCollectionRepository;
 import com.genx.service.interfaces.ISampleCollectionService;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SampleCollectionServiceImpl implements ISampleCollectionService {
@@ -20,6 +24,10 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
 
     @Autowired
     private IParticipantRepository participantRepository;
+
+    @Autowired
+    private SampleCollectionMapper sampleCollectionMapper;
+
 
     @Transactional
     @Override
@@ -43,5 +51,13 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
         sampleCollection.setStatus(ESampleCollectionStatus.SENT_TO_LAB);
         sampleCollection.setConfirmedAt(LocalDateTime.now());
         sampleCollectionRepository.save(sampleCollection);
+    }
+
+    @Override
+    public List<SampleCollectionHistoryResponse> getSampleCollectionHistory() {
+        List<SampleCollection> collections = sampleCollectionRepository.findByStatus(ESampleCollectionStatus.SENT_TO_LAB);
+        return collections.stream()
+                .map(sampleCollectionMapper::toHistoryResponse)
+                .collect(Collectors.toList());
     }
 }

@@ -4,10 +4,13 @@ package com.genx.controller;
 import com.genx.dto.request.KitCodeRequest;
 import com.genx.dto.response.ApiResponse;
 import com.genx.dto.response.ParticipantResponse;
+import com.genx.dto.response.SampleCollectionHistoryResponse;
 import com.genx.service.interfaces.IParticipantService;
 import com.genx.service.interfaces.ISampleCollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/staff/sample-collection")
@@ -18,6 +21,12 @@ public class StaffSampleCollectionController {
 
     @Autowired
     private ISampleCollectionService sampleCollectionService;
+
+    @PutMapping("/participants/{id}/send-kit")
+    public ParticipantResponse sendKitToCustomer(@PathVariable Long id) {
+        return participantService.sendKitToCustomer(id);
+    }
+
 
 
     @PutMapping("/participants/{id}/kit-code")
@@ -38,6 +47,11 @@ public class StaffSampleCollectionController {
                 .message("Gửi mẫu đến phòng lab thành công.")
                 .result("OK")
                 .build();
+    }
+
+    @GetMapping("/history")
+    public List<SampleCollectionHistoryResponse> getSampleCollectionHistory() {
+        return sampleCollectionService.getSampleCollectionHistory();
     }
 
 }

@@ -30,6 +30,9 @@ public class AuthController {
     @Value("${jwt.refresh-expiration}")
     private int refreshTokenExpiration;
 
+    @Value("${cookie.secure}")
+    private boolean secureCookie;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid UserCreationRequest request) {
         return ResponseEntity.ok(authService.registerUser(request));
@@ -42,7 +45,7 @@ public class AuthController {
         // Gửi refreshToken vào cookie
         Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true); // chỉ dùng HTTPS nếu bạn deploy thực tế
+        refreshCookie.setSecure(secureCookie); // chỉ dùng HTTPSdeploy thực tế
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpiration / 1000); // 7 ngày
 
@@ -62,6 +65,13 @@ public class AuthController {
                                                HttpServletResponse httpResponse) throws IOException, IOException {
         LoginResponse response = authService.loginWithGoogle(code); // bước 2 và 3 dưới
 
+        Cookie refreshCookie = new Cookie("refreshToken", response.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(secureCookie);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(refreshTokenExpiration / 1000);
+
+        httpResponse.addCookie(refreshCookie);
         // Redirect FE kèm access token
         String redirectUrl = "http://localhost:3000/oauth2/success?access_token=" + response.getAccessToken();
         httpResponse.sendRedirect(redirectUrl);
@@ -76,7 +86,7 @@ public class AuthController {
         // Gửi refreshToken vào cookie
         Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(secureCookie);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpiration);
 
@@ -107,18 +117,18 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Boolean>> logout(
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
-        // Gọi service để xóa refresh token khỏi DB
+
         authService.logout(refreshToken);
 
-        // Tạo cookie rỗng để xóa refresh token khỏi trình duyệt
+
         ResponseCookie clearedCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureCookie)
                 .path("/")
                 .maxAge(0)
                 .build();
 
-        // Trả response chuẩn REST
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearedCookie.toString())
                 .body(ApiResponse.<Boolean>builder()

@@ -16,6 +16,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -68,6 +70,14 @@ public class BookingService {
                 booking.getParticipants().forEach(p -> p.setBooking(booking));
             }
 
+            String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String code;
+            do {
+                String randomPart = String.format("%06d", (int)(Math.random() * 1_000_000));
+                code = "BK" + datePart + "_" + randomPart;
+            } while (bookingRepository.existsByCode(code));
+
+            booking.setCode(code);
             // B1: Lưu booking trước để có ID
             Booking savedBooking = bookingRepository.save(booking);
 
@@ -162,13 +172,19 @@ public class BookingService {
     }
 
     public List<BookingResponse> getRegistrationsByStatus(EPaymentStatus status) {
-        return bookingRepository.findByPaymentStatus(status).stream()
+        Long customerId = SecurityUtil.getCurrentUserId()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user đang đăng nhập"));
+
+        return bookingRepository.findByCustomerIdAndPaymentStatus(customerId, status).stream()
                 .map(bookingMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     public List<BookingResponse> getAllRegistrations() {
-        return bookingRepository.findAll()
+        Long customerId = SecurityUtil.getCurrentUserId()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user đang đăng nhập"));
+
+        return bookingRepository.findByCustomerId(customerId)
                 .stream()
                 .map(bookingMapper::toDTO)
                 .collect(Collectors.toList());

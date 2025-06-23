@@ -12,13 +12,13 @@ import com.genx.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/vnpay")  // Keeping original VNPay endpoint
 public class PaymentController {
@@ -30,6 +30,9 @@ public class PaymentController {
     private PaymentMapper paymentMapper;
     @Autowired
     private BookingService bookingService;
+
+    @Value("${frontendUrl}")
+    private String frontendRedirect;
 
     @PostMapping("/create-payment")  // Keeping original endpoint
     public ResponseEntity<?> createPayment(@RequestBody BookingResponse bookingResponse, HttpServletRequest request) {
@@ -66,19 +69,26 @@ public class PaymentController {
             } else {
                 bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
             }
-            Thread.sleep(2000);
-            // 🔁 Redirect về FE và giữ nguyên các query params
-            String frontendRedirect = "https://a841-1-54-116-215.ngrok-free.app/payment-result";
+
             String queryParams = params.entrySet().stream()
                     .map(entry -> entry.getKey() + "=" + entry.getValue())
                     .reduce((a, b) -> a + "&" + b)
                     .orElse("");
-            response.sendRedirect(frontendRedirect + "?" + queryParams);
+
+
+           // String redirectUrl = frontendRedirect + "/payment-result?" + queryParams;
+            String vnpTxnRef = params.get("vnp_TxnRef");
+            boolean isSuccess = paymentResponse != null && "00".equals(paymentResponse.getResponseCode());
+            String redirectUrl = frontendRedirect + "/payment-result"
+                    + "?vnp_TxnRef=" + vnpTxnRef
+                    + "&status=" + (isSuccess ? "success" : "fail");
+
+            response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                response.sendRedirect("https://a841-1-54-116-215.ngrok-free.app/payment-result?error=1");
+                response.sendRedirect(frontendRedirect + "/payment-result?error=1");
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

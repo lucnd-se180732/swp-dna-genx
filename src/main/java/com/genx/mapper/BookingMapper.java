@@ -14,7 +14,6 @@ public interface BookingMapper {
     @Mapping(source = "phoneNumber", target = "phoneNumber")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "appointmentDate", target = "appointmentDate")
-    //@Mapping(source = "participants", target = "participants")
     @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
     @Mapping(source = "booking.createdAt", target = "createdAt")
@@ -36,14 +35,19 @@ public interface BookingMapper {
     @Mapping(target = "customerName", source = "customer.user.fullName")
     @Mapping(target = "recordStaffName", source = "recordStaff.user.fullName")
     @Mapping(target = "serviceId", source = "service.id")
-    //@Mapping(target = "serviceName", source = "service.name")
+    @Mapping(target = "serviceTypeName", source = "service.name")
     @Mapping(target = "servicePrice", source = "service.price")
     @Mapping(target = "collectionMethod", source = "collectionMethod")
     @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
+    @Mapping(
+            target = "sampleCollectionStatus",
+            expression = "java(booking.getSampleCollection() != null ? booking.getSampleCollection().getStatus() : null)"
+    )
     @Named("toResponse")
     BookingResponse toResponse(Booking booking);
 
     // for booking summary
-    @Mapping(target = "id", source = "id")
+    @Mapping(target = "serviceTypeName", source = "service.name")
+    @Mapping(target = "customerName", source = "customer.user.fullName")
     BookingSummaryResponse toSummary(Booking booking);
 }

@@ -18,6 +18,8 @@ import java.util.List;
 @Table(name = "booking")
 public class Booking extends BaseEntity {
 
+    @Column(name = "code", nullable = false, unique = true)
+    private String code;
 
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
@@ -40,7 +42,7 @@ public class Booking extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "record_staff_id")
-    private StaffInfo recordStaff; // hoặc RecordStaff nếu bạn có entity riêng
+    private StaffInfo recordStaff;
 
     @ManyToOne
     @JoinColumn(name = "service_id")
@@ -68,5 +70,17 @@ public class Booking extends BaseEntity {
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
+
+    @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private SampleCollection sampleCollection;
+
+    @PrePersist
+    public void generateCode() {
+        if (this.code == null) {
+            String datePart = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String randomPart = String.format("%06d", (int)(Math.random() * 1_000_000));
+            this.code = "BK" + datePart + "_" + randomPart;
+        }
+    }
 
 }
