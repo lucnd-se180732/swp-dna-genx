@@ -1,6 +1,5 @@
 package com.genx.mapper;
 
-import com.genx.dto.BlogDto;
 import com.genx.dto.request.BlogRequestDto;
 import com.genx.dto.response.BlogResponseDto;
 import com.genx.entity.BlogRate.Blog;
@@ -9,7 +8,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface BlogMapper {
 
-    @Mapping(target = "blogId", source = "blogId") // hoặc có thể bỏ vì tên trùng
+    @Mapping(target = "blogId", source = "blogId")
     @Mapping(target = "authorName", source = "createdBy.fullName")
     BlogResponseDto toResponseDto(Blog blog);
 

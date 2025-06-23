@@ -35,7 +35,7 @@ public class AdminAccountInitializer implements CommandLineRunner {
             admin.setFullName("DNA-GenX");
             admin.setEnabled(true);
             admin.setAccountNonLocked(true);
-            admin.setAuthProvider(AuthProvider.LOCAL);
+            admin.setAuthProvider(AuthProvider.SYSTEM);
 
 
             userRepository.save(admin);
