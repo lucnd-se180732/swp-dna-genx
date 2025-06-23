@@ -1,6 +1,6 @@
 package com.genx.config;
 
-import com.genx.enums.AuthProvider;
+import com.genx.enums.EAuthProvider;
 import com.genx.entity.User;
 import com.genx.enums.ERole;
 import com.genx.repository.UserRepository;
@@ -35,7 +35,7 @@ public class AdminAccountInitializer implements CommandLineRunner {
             admin.setFullName("DNA-GenX");
             admin.setEnabled(true);
             admin.setAccountNonLocked(true);
-            admin.setAuthProvider(AuthProvider.SYSTEM);
+            admin.setAuthProvider(EAuthProvider.SYSTEM);
 
 
             userRepository.save(admin);

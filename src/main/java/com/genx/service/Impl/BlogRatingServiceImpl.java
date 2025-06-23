@@ -1,0 +1,52 @@
+package com.genx.service.Impl;
+
+import com.genx.dto.request.BlogRatingRequestDto;
+import com.genx.dto.response.BlogRatingResponseDto;
+import com.genx.entity.BlogRate.Blog;
+import com.genx.entity.BlogRate.BlogRating;
+import com.genx.entity.User;
+import com.genx.repository.BlogRatingRepository;
+import com.genx.repository.BlogRepository;
+import com.genx.repository.UserRepository;
+import com.genx.service.interfaces.IBlogRatingService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class BlogRatingServiceImpl implements IBlogRatingService {
+
+    private final BlogRepository blogRepository;
+    private final UserRepository userRepository;
+    private final BlogRatingRepository blogRatingRepository;
+
+    @Override
+    public void rateBlog(Long userId, BlogRatingRequestDto dto) {
+        Blog blog = blogRepository.findById(dto.getBlogId())
+                .orElseThrow(() -> new RuntimeException("Blog not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        BlogRating rating = blogRatingRepository.findByBlogAndUser(blog, user)
+                .orElse(BlogRating.builder().blog(blog).user(user).build());
+
+        rating.setRating(dto.getRating());
+        blogRatingRepository.save(rating);
+    }
+
+    @Override
+    public BlogRatingResponseDto getBlogRating(Long blogId) {
+        Blog blog = blogRepository.findById(blogId)
+                .orElseThrow(() -> new RuntimeException("Blog not found"));
+
+        List<BlogRating> ratings = blogRatingRepository.findByBlog(blog);
+        double average = ratings.stream().mapToInt(BlogRating::getRating).average().orElse(0.0);
+        return BlogRatingResponseDto.builder()
+                .blogId(blogId)
+                .averageRating(average)
+                .totalVotes(ratings.size())
+                .build();
+    }
+}

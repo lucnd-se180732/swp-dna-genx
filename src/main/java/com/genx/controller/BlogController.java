@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173") // <-- Để Vue gọi được API
+
 @RestController
 @RequestMapping("/api/blogs")
 @RequiredArgsConstructor

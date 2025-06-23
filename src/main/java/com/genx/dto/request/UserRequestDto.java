@@ -1,8 +1,10 @@
 package com.genx.dto.request;
 
-import com.genx.enums.AuthProvider;
+import com.genx.enums.EAuthProvider;
 import com.genx.enums.ERole;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,10 +14,13 @@ import lombok.*;
 public class UserRequestDto {
     private String fullName;
     private String gender;
-    private String phone;
+    private String phoneNumber;
     private String email;
     private String username;
     private String password;
     private ERole role;
-    private AuthProvider authProvider;
+    private String avatar;
+    private byte[] fingerprintData;
+    private LocalDateTime startDate;
+    private EAuthProvider authProvider;
 }

@@ -1,6 +1,6 @@
 package com.genx.enums;
 
-public enum AuthProvider {
+public enum EAuthProvider {
     SYSTEM,
     GOOGLE
 }

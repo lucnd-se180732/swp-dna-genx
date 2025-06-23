@@ -1,9 +1,11 @@
 package com.genx.dto.response;
 
 import com.genx.enums.ERole;
-import com.genx.enums.AuthProvider;
+import com.genx.enums.EAuthProvider;
 
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,11 +16,16 @@ public class UserResponseDto {
     private Long id;
     private String fullName;
     private String gender;
-    private String phone;
+    private String phoneNumber;
     private String email;
     private String username;
     private ERole role;
     private boolean enabled;
     private boolean accountNonLocked;
-    private AuthProvider authProvider;
+    private String avatar;
+    private byte[] fingerprintData;
+    private LocalDateTime startDate;
+    private EAuthProvider authProvider;
+
+
 }

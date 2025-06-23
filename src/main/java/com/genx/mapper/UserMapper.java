@@ -7,8 +7,13 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    User toEntity(UserRequestDto dto);
+
+    @Mapping(source = "staffInfo.avatar", target = "avatar")
+    @Mapping(source = "staffInfo.fingerprintData", target = "fingerprintData")
+    @Mapping(source = "staffInfo.startdDate", target = "startDate")
     UserResponseDto toDTO(User user);
+
+    User toEntity(UserRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(@MappingTarget User user, UserRequestDto dto);
