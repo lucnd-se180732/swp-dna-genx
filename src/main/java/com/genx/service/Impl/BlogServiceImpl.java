@@ -10,6 +10,7 @@ import com.genx.mapper.BlogMapper;
 import com.genx.repository.BlogRepository;
 import com.genx.repository.UserRepository;
 import com.genx.service.interfaces.IBlogService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,10 +48,15 @@ public class BlogServiceImpl implements IBlogService {
     }
 
     @Override
+    @Transactional
     public BlogResponseDto getBlogById(Long id) {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Blog not found with id: " + id));
-        return blogMapper.toResponseDto(blog);
+
+        blog.setViewCount(blog.getViewCount() + 1); // Tăng lượt xem
+        blogRepository.save(blog); // Lưu lại
+
+        return blogMapper.toResponseDto(blog); // Trả về DTO đã có viewCount
     }
 
 
@@ -88,4 +94,6 @@ public class BlogServiceImpl implements IBlogService {
         return blogRepository.findAll(pageable)
                 .map(blogMapper::toResponseDto);
     }
+
+
 }

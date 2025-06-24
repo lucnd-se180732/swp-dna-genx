@@ -34,6 +34,9 @@ public class Blog {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "view_count")
+    private int viewCount = 0;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne

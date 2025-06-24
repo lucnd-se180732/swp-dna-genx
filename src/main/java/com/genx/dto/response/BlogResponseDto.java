@@ -18,6 +18,7 @@ public class BlogResponseDto {
     private String shortDescription;
     private String thumbnailUrl;
     private String slug;
+    private int viewCount;
     private String authorName;
     private LocalDateTime createdAt;
 }

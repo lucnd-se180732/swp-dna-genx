@@ -10,12 +10,14 @@ public interface BlogMapper {
 
     @Mapping(target = "blogId", source = "blogId")
     @Mapping(target = "authorName", source = "createdBy.fullName")
+    @Mapping(target = "viewCount", source = "viewCount")
     BlogResponseDto toResponseDto(Blog blog);
 
     @Mapping(target = "blogId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "slug", source = "title", qualifiedByName = "generateSlug")
+    @Mapping(target = "viewCount", ignore = true)
     Blog toEntity(BlogRequestDto dto);
 
     @Named("generateSlug")
