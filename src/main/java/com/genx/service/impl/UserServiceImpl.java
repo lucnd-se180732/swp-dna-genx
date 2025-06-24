@@ -1,5 +1,7 @@
 package com.genx.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.genx.dto.request.ChangePasswordRequest;
 import com.genx.dto.request.UpdateProfileRequest;
 import com.genx.dto.response.UserProfileResponse;
@@ -13,6 +15,7 @@ import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IUploadImageFile;
 import com.genx.service.interfaces.IUserService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
+@Slf4j
 @Transactional(rollbackOn = Exception.class)
 public class UserServiceImpl implements IUserService {
 
@@ -45,6 +49,9 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private IUploadImageFile uploadImageFile;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
 
     @Override
@@ -137,10 +144,35 @@ public class UserServiceImpl implements IUserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         try {
-            // 1. Upload ảnh lên cloud
+            // 1. Lấy avatar cũ (nếu có)
+            String oldAvatarUrl = null;
+
+            if (user.getRole().name().contains("RECORDER_STAFF")) {
+                StaffInfo staff = staffInfoRepository.findByUserId(user.getId());
+                if (staff != null) {
+                    oldAvatarUrl = staff.getAvatar();
+                }
+            } else if (user.getRole().name().equals("CUSTOMER")) {
+                Customer customer = customerRepository.findByUserId(user.getId());
+                if (customer != null) {
+                    oldAvatarUrl = customer.getAvatar();
+                }
+            }
+
+
+            if (oldAvatarUrl != null && !oldAvatarUrl.isBlank()) {
+                try {
+                    String publicId = extractPublicIdFromUrl(oldAvatarUrl);
+                    cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                } catch (Exception e) {
+                    log.warn("Không thể xóa ảnh cũ: {}", e.getMessage());
+                }
+            }
+
+
             String uploadedUrl = uploadImageFile.uploadImageFile(file);
 
-            // 2. Lưu URL ảnh vào bản ghi tương ứng
+
             if (user.getRole().name().contains("RECORDER_STAFF")) {
                 StaffInfo staff = staffInfoRepository.findByUserId(user.getId());
                 if (staff != null) {
@@ -156,6 +188,7 @@ public class UserServiceImpl implements IUserService {
             }
 
             return uploadedUrl;
+
         } catch (IOException e) {
             throw new RuntimeException("Không thể upload ảnh đại diện", e);
         }
@@ -172,6 +205,16 @@ public class UserServiceImpl implements IUserService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    private String extractPublicIdFromUrl(String url) {
+        if (url == null || url.isBlank()) return null;
+
+        int folderIndex = url.indexOf("avatars/");
+        if (folderIndex == -1) return null;
+
+        String noExtension = url.substring(0, url.lastIndexOf('.'));
+        return noExtension.substring(folderIndex); // Trả về "avatars/abc123_xyz"
     }
 
 }

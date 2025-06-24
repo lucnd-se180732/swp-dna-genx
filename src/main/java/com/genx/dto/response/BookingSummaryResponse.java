@@ -20,6 +20,7 @@ public class BookingSummaryResponse {
     private LocalDateTime createdAt;
     private EBookingStatus status;
     private ECaseType caseType;
-    private String serviceTypeName;         // Dịch vụ
+    private String serviceTypeName;
+    private String avatar;
     private ECollectionMethod collectionMethod; // Hình thức lấy mẫu
 }

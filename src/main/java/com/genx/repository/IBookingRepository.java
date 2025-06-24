@@ -41,5 +41,7 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByCode(String code);
 
+    List<Booking> findTop5ByOrderByCreatedAtDesc();
+
 
 }
