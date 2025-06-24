@@ -60,8 +60,7 @@ public class Participant {
     @Column(name = "sample_type")
     private ESampleType sampleType;
 
-    @Lob
-    private byte[] fingerprintData;
-
+    @Column(name = "fingerprint_image_url")
+    private String fingerprintImageUrl;
 
 }
