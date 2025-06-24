@@ -1,6 +1,7 @@
 package com.genx.entity;
 
 import com.genx.enums.EParticipantSampleStatus;
+import com.genx.enums.ESampleType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -54,5 +55,13 @@ public class Participant {
     @Enumerated(EnumType.STRING)
     @Column(name = "sample_status")
     private EParticipantSampleStatus sampleStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sample_type")
+    private ESampleType sampleType;
+
+    @Lob
+    private byte[] fingerprintData;
+
 
 }

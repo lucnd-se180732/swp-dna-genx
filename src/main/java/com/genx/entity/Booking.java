@@ -60,7 +60,6 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
-
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private EBookingStatus status = EBookingStatus.PENDING;

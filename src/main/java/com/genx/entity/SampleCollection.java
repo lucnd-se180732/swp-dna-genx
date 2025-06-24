@@ -36,4 +36,8 @@ public class SampleCollection {
 
     @Column(length = 500)
     private String note;
+
+    @OneToOne
+    @JoinColumn(name = "adn_result_id")
+    private AdnResult adnResult;
 }

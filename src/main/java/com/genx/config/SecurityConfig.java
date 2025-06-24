@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //  Public endpoints
                         .requestMatchers(
+                                "/api/adn-results",
                                 "/api/v1/auth/**",
                                 "/api/vnpay/**",
                                 "/payment-result",
