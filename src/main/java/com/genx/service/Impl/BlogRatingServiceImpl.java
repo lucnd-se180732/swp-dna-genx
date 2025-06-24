@@ -42,7 +42,7 @@ public class BlogRatingServiceImpl implements IBlogRatingService {
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
         List<BlogRating> ratings = blogRatingRepository.findByBlog(blog);
-        double average = ratings.stream().mapToInt(BlogRating::getRating).average().orElse(0.0);
+        double average = ratings.stream().mapToDouble(BlogRating::getRating).average().orElse(0.0);
         return BlogRatingResponseDto.builder()
                 .blogId(blogId)
                 .averageRating(average)

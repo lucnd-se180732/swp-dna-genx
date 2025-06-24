@@ -28,5 +28,5 @@ public class BlogRating {
     private User user;
 
     @Column(nullable = false)
-    private int rating; // 1 to 5
+    private double rating; // 1 to 5
 }
