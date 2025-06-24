@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/logout").authenticated()
 
                         //  Role-based access
-                        .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**").hasRole("RECORDER_STAFF")
+                        .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/lab/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
