@@ -31,7 +31,7 @@ public class Blog {
 
     private String slug;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(name = "view_count")
