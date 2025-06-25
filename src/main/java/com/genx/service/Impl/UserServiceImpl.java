@@ -10,6 +10,7 @@ import com.genx.repository.StaffInfoRepository;
 import com.genx.repository.UserRepository;
 import com.genx.service.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +25,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
 
+    @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
     private final UserMapper userMapper;
+
+    @Autowired
     private final StaffInfoRepository staffInfoRepository;
+
+    @Autowired
     private final PasswordEncoder passwordEncoder;
 
     @Override

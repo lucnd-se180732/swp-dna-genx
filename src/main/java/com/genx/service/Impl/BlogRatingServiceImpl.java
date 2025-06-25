@@ -10,6 +10,7 @@ import com.genx.repository.BlogRepository;
 import com.genx.repository.UserRepository;
 import com.genx.service.interfaces.IBlogRatingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,8 +19,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BlogRatingServiceImpl implements IBlogRatingService {
 
+    @Autowired
     private final BlogRepository blogRepository;
+
+    @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
     private final BlogRatingRepository blogRatingRepository;
 
     @Override

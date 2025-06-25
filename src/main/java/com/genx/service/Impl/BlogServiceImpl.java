@@ -12,6 +12,7 @@ import com.genx.repository.UserRepository;
 import com.genx.service.interfaces.IBlogService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements IBlogService {
 
+    @Autowired
     private final BlogRepository blogRepository;
+
+    @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
     private final BlogMapper blogMapper;
 
     @Override
