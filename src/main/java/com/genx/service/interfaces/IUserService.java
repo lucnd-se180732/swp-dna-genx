@@ -7,7 +7,7 @@ import com.genx.entity.User;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IUserService {
-    User findByUsernameOrEmail(String usernameOrEmail);
+//    User findByUsernameOrEmail(String usernameOrEmail);
 
     UserProfileResponse getUserProfileByUsername(String username);
 

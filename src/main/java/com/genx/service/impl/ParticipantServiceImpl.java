@@ -3,7 +3,9 @@ package com.genx.service.impl;
 import com.genx.dto.request.KitCodeRequest;
 import com.genx.dto.response.ParticipantResponse;
 import com.genx.entity.Participant;
+import com.genx.entity.User;
 import com.genx.enums.EBookingStatus;
+import com.genx.enums.ECollectionMethod;
 import com.genx.enums.EParticipantSampleStatus;
 import com.genx.mapper.ParticipantMapper;
 import com.genx.repository.IParticipantRepository;
@@ -23,11 +25,7 @@ public class ParticipantServiceImpl implements IParticipantService {
     private IParticipantRepository participantRepository;
 
     @Autowired
-    private IStaffInfoRepository staffInfoRepository;
-
-    @Autowired
     private ParticipantMapper participantMapper;
-
 
 
     @Override
@@ -45,37 +43,20 @@ public class ParticipantServiceImpl implements IParticipantService {
     }
 
 
-
     @Override
-    public ParticipantResponse enterKitCode(Long participantId, KitCodeRequest request) {
-        Participant participant = participantRepository.findById(participantId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người tham gia với ID: " + participantId));
-
-        if (participant.getBooking() == null || participant.getBooking().getStatus() != EBookingStatus.CONFIRMED) {
-            throw new IllegalStateException("Không thể nhập mã kit vì booking chưa được xác nhận.");
-        }
-        if (participant.getKitCode() != null) {
-            throw new IllegalStateException("Mã kit đã được nhập trước đó.");
-        }
-        Long fakeLoggedInUserId = SecurityUtil.getCurrentUserId()
+    public ParticipantResponse enterKitCodeByStaff(Long participantId, KitCodeRequest request) {
+        User currentUser = SecurityUtil.getCurrentUser()
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
 
-        participant.setKitCode(request.getKitCode());
-        participant.setKitEnteredAt(LocalDateTime.now());
-        participant.setKitEnteredBy(staffInfoRepository.findById(fakeLoggedInUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên nhập kit")));
+        return handleEnterKitCode(participantId, request, currentUser, false);
+    }
 
-        // Tự động cập nhật sampleStatus theo hình thức thu mẫu
-        var method = participant.getBooking().getCollectionMethod();
-        if (method == null) {
-            throw new IllegalStateException("Không xác định được hình thức thu mẫu.");
-        }
-        switch (method) {
-            case HOME -> participant.setSampleStatus(EParticipantSampleStatus.WAITING_FOR_COLLECTION);
-            case HOSPITAL -> participant.setSampleStatus(EParticipantSampleStatus.CONFIRMED);
-        }
+    @Override
+    public ParticipantResponse enterKitCodeByCustomer(Long participantId, KitCodeRequest request) {
+        User currentUser = SecurityUtil.getCurrentUser()
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
 
-        return participantMapper.toResponse(participantRepository.save(participant));
+        return handleEnterKitCode(participantId, request, currentUser, true);
     }
 
     @Override
@@ -90,4 +71,53 @@ public class ParticipantServiceImpl implements IParticipantService {
         participant.setSampleStatus(EParticipantSampleStatus.CONFIRMED);
         return participantMapper.toResponse(participantRepository.save(participant));
     }
+
+    private ParticipantResponse handleEnterKitCode(Long participantId, KitCodeRequest request, User currentUser, boolean isCustomer) {
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người tham gia với ID: " + participantId));
+
+        if (participant.getBooking() == null || participant.getBooking().getStatus() != EBookingStatus.CONFIRMED) {
+            throw new IllegalStateException("Không thể nhập mã kit vì booking chưa được xác nhận.");
+        }
+
+        if (participant.getKitCode() != null) {
+            throw new IllegalStateException("Mã kit đã được nhập trước đó.");
+        }
+
+        if (isCustomer) {
+            String ownerUsername = participant.getBooking().getCustomer().getUser().getUsername();
+            if (!currentUser.getUsername().equals(ownerUsername)) {
+                throw new SecurityException("Bạn không có quyền nhập mã kit cho người tham gia này.");
+            }
+
+            ECollectionMethod method = participant.getBooking().getCollectionMethod();
+            if (method == ECollectionMethod.HOME) {
+                if (participant.getSampleStatus() != EParticipantSampleStatus.KIT_SENT) {
+                    throw new IllegalStateException("Bạn chỉ có thể nhập mã kit khi bộ kit đã được gửi.");
+                }
+            }
+        }
+
+
+        participant.setKitEnteredBy(currentUser);
+        participant.setKitCode(request.getKitCode());
+        participant.setKitEnteredAt(LocalDateTime.now());
+        participant.setSampleType(request.getSampleType());
+
+        if (isCustomer) {
+            participant.setSampleStatus(EParticipantSampleStatus.WAITING_FOR_COLLECTION);
+        } else {
+            ECollectionMethod method = participant.getBooking().getCollectionMethod();
+            if (method == null) {
+                throw new IllegalStateException("Không xác định được hình thức thu mẫu.");
+            }
+            switch (method) {
+                case HOME -> participant.setSampleStatus(EParticipantSampleStatus.WAITING_FOR_COLLECTION);
+                case HOSPITAL -> participant.setSampleStatus(EParticipantSampleStatus.CONFIRMED);
+            }
+        }
+
+        return participantMapper.toResponse(participantRepository.save(participant));
+    }
+
 }

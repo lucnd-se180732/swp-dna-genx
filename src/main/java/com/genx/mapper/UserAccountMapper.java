@@ -14,7 +14,8 @@ public interface UserAccountMapper {
             @Mapping(target = "phoneNumber", source = "phoneNumber"),
             @Mapping(target = "gender", source = "gender"),
             @Mapping(target = "role", expression = "java(user.getRole().name())"),
-
+            @Mapping(target = "dob", ignore = true),
+            @Mapping(target = "address", ignore = true),
             @Mapping(target = "avatar", ignore = true),
             @Mapping(target = "startDate", ignore = true)
     })

@@ -96,27 +96,6 @@ public class PaymentController {
     }
 
 
-//    @GetMapping("/vnpay-return")  // Keeping original endpoint
-//    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
-//        System.out.println("🔥 Đã vào callback");
-//        try {
-//            PaymentResponse paymentResponse = vnPayService.validatePayment(params);
-//            String orderId = params.get("vnp_TxnRef");
-//
-//            if (paymentResponse != null && "00".equals(paymentResponse.getResponseCode())) {
-//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.PAID);
-//                return ResponseEntity.ok(paymentResponse);
-//            } else {
-//                bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
-//                return ResponseEntity.badRequest()
-//                        .body(Map.of("error", "Payment failed"));
-//            }
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest()
-//                    .body(Map.of("error", e.getMessage()));
-//        }
-//    }
 
     @GetMapping("/payment-status/{orderId}")
     public ResponseEntity<?> getPaymentStatus(@PathVariable String orderId) {

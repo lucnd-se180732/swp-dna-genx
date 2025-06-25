@@ -131,7 +131,14 @@ public class AuthServiceImpl implements IAuthService {
                 newUser.setAuthProvider(EAuthProvider.GOOGLE);
                 newUser.setEnabled(true);
                 newUser.setAccountNonLocked(true);
-                return userRepository.save(newUser);
+                User savedUser = userRepository.save(newUser);
+
+                // ✅ Sau đó mới tạo Customer gắn User
+                Customer customer = new Customer();
+                customer.setUser(savedUser);
+                customerRepository.save(customer);
+
+                return savedUser;
             });
 
             if (!user.isEnabled() || !user.isAccountNonLocked())

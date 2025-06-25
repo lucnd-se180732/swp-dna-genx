@@ -55,11 +55,6 @@ public class AuthController {
     }
 
 
-//    @GetMapping("/callback")
-//    public ResponseEntity<LoginResponse> googleCallback(@RequestParam("code") String code) {
-//        LoginResponse response = authService.loginWithGoogle(code);
-//        return ResponseEntity.ok(response);
-//    }
     @GetMapping("/callback")
     public ResponseEntity<Void> googleCallback(@RequestParam("code") String code,
                                                HttpServletResponse httpResponse) throws IOException, IOException {

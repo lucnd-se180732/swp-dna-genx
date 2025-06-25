@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface IStaffInfoRepository extends JpaRepository<StaffInfo, Long> {
 
     StaffInfo findByUserId(Long userId);
+
 }

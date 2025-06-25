@@ -2,9 +2,7 @@ package com.genx.service.impl;
 
     import com.genx.dto.response.BookingResponse;
     import com.genx.dto.response.BookingSummaryResponse;
-    import com.genx.entity.Booking;
-    import com.genx.entity.Participant;
-    import com.genx.entity.SampleCollection;
+    import com.genx.entity.*;
     import com.genx.enums.EBookingStatus;
     import com.genx.enums.EParticipantSampleStatus;
     import com.genx.enums.ESampleCollectionStatus;
@@ -14,6 +12,8 @@ package com.genx.service.impl;
     import com.genx.repository.IBookingRepository;
     import com.genx.repository.IParticipantRepository;
     import com.genx.repository.ISampleCollectionRepository;
+    import com.genx.repository.IStaffInfoRepository;
+    import com.genx.security.SecurityUtil;
     import com.genx.service.interfaces.IBookingService;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.data.domain.Page;
@@ -28,6 +28,9 @@ package com.genx.service.impl;
 
         @Autowired
         private IBookingRepository bookingRepository;
+
+        @Autowired
+        private IStaffInfoRepository staffInfoRepository;;
 
         @Autowired
         private  BookingMapper bookingMapper;
@@ -58,9 +61,17 @@ package com.genx.service.impl;
         @Override
         @Transactional
         public BookingResponse confirmBooking(Long id) {
+            Long currentUser = SecurityUtil.getCurrentUserId()
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng hiện tại"));
+
+            StaffInfo staffInfo = staffInfoRepository.findByUserId(currentUser);
+            if (staffInfo == null) {
+                throw new IllegalArgumentException("Không tìm thấy thông tin nhân viên");
+            }
             Booking booking = bookingRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Booking not found with id: " + id));
             booking.setStatus(EBookingStatus.CONFIRMED);
+            booking.setRecordStaff(staffInfo);
             for (Participant p : booking.getParticipants()) {
                 p.setSampleStatus(EParticipantSampleStatus.PENDING);
             }

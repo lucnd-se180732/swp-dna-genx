@@ -5,6 +5,7 @@ import com.genx.dto.response.ParticipantResponse;
 
 public interface IParticipantService{
     ParticipantResponse sendKitToCustomer(Long participantId);
-    ParticipantResponse enterKitCode(Long participantId, KitCodeRequest request);
     ParticipantResponse confirmCollectedSample(Long participantId);
+    ParticipantResponse enterKitCodeByStaff(Long participantId, KitCodeRequest request);
+    ParticipantResponse enterKitCodeByCustomer(Long participantId, KitCodeRequest request);
 }

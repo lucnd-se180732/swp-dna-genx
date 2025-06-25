@@ -54,19 +54,6 @@ public class UserServiceImpl implements IUserService {
     private Cloudinary cloudinary;
 
 
-    @Override
-    public User findByUsernameOrEmail(String usernameOrEmail) {
-    try {
-        System.out.println("🔍 Đang tìm user với username/email = " + usernameOrEmail);
-
-        return userRepository.findByUsernameOrEmail(usernameOrEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-        } catch (RuntimeException e) {
-            // Log the exception if needed
-            throw e; // Re-throw the exception to be handled by the caller
-        }
-
-    }
 
     @Override
     public UserProfileResponse getUserProfileByUsername(String username) {
@@ -87,6 +74,8 @@ public class UserServiceImpl implements IUserService {
             Customer customer = customerRepository.findByUserId(user.getId());
             if (customer != null) {
                 response.setAvatar(customer.getAvatar());
+                response.setDob(customer.getDob());
+                response.setAddress(customer.getAddress());
             }
         }
 
@@ -117,6 +106,7 @@ public class UserServiceImpl implements IUserService {
             if (staff != null) {
                 if (request.getAvatar() != null) {
                     staff.setAvatar(request.getAvatar());
+
                 }
                 if (request.getStartDate() != null) {
                     staff.setStartDate(request.getStartDate());
@@ -128,8 +118,16 @@ public class UserServiceImpl implements IUserService {
         // CUSTOMER
         if (user.getRole().name().equals("CUSTOMER")) {
             Customer customer = customerRepository.findByUserId(user.getId());
-            if (customer != null && request.getAvatar() != null) {
-                customer.setAvatar(request.getAvatar());
+            if (customer != null) {
+                if (request.getAvatar() != null) {
+                    customer.setAvatar(request.getAvatar());
+                }
+                if (request.getDob() != null) {
+                    customer.setDob(request.getDob());
+                }
+                if (request.getAddress() != null) {
+                    customer.setAddress(request.getAddress());
+                }
                 customerRepository.save(customer);
             }
         }

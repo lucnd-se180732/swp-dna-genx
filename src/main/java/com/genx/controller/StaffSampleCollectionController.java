@@ -32,7 +32,7 @@ public class StaffSampleCollectionController {
     @PutMapping("/participants/{id}/kit-code")
     public ParticipantResponse enterKitCode(@PathVariable("id") Long participantId,
                                             @RequestBody KitCodeRequest request) {
-        return participantService.enterKitCode(participantId, request);
+        return participantService.enterKitCodeByStaff(participantId, request);
     }
 
     @PutMapping("/{participantId}/confirm")
