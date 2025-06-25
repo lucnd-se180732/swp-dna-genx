@@ -13,8 +13,8 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
 
     @Mapping(source = "staffInfo.avatar", target = "avatar")
-    @Mapping(source = "staffInfo.fingerprintData", target = "fingerprintData")
-    @Mapping(source = "staffInfo.startdDate", target = "startDate")
+    @Mapping(source = "staffInfo.fingerprintImageUrl", target = "fingerprintImageUrl")
+    @Mapping(source = "staffInfo.startDate", target = "startDate")
     UserResponseDto toDTO(User user);
     @Mapping(target = "role", expression = "java(com.genx.enums.ERole.CUSTOMER)")
     @Mapping(target = "enabled", constant = "true")

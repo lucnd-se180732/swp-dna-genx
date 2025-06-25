@@ -23,7 +23,7 @@ public class UserResponseDto {
     private boolean enabled;
     private boolean accountNonLocked;
     private String avatar;
-    private byte[] fingerprintData;
+    private String fingerprintImageUrl;
     private LocalDateTime startDate;
     private EAuthProvider authProvider;
 

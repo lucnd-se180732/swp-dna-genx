@@ -20,7 +20,7 @@ public class UserRequestDto {
     private String password;
     private ERole role;
     private String avatar;
-    private byte[] fingerprintData;
+    private String fingerprintImageUrl;
     private LocalDateTime startDate;
     private EAuthProvider authProvider;
 }

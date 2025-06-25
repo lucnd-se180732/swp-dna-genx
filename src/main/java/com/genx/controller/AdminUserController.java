@@ -22,7 +22,7 @@ public class AdminUserController {
 
     @PostMapping("/staff")
     public ResponseEntity<UserResponseDto> createStaff(@RequestBody UserRequestDto request) {
-        if (request.getRole() != ERole.LAB_STAFF && request.getRole() != ERole.RECORD_STAFF ) {
+        if (request.getRole() != ERole.LAB_STAFF && request.getRole() != ERole.RECORDER_STAFF ) {
             return ResponseEntity.badRequest().build();
         }
         UserResponseDto response = userService.createStaff(request);
@@ -45,7 +45,7 @@ public class AdminUserController {
     @DeleteMapping("/staff/{id}")
     public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
         UserResponseDto user = userService.getUserById(id);
-        if (user.getRole() != ERole.LAB_STAFF && user.getRole() != ERole.RECORD_STAFF ) {
+        if (user.getRole() != ERole.LAB_STAFF && user.getRole() != ERole.RECORDER_STAFF ) {
             return ResponseEntity.status(403).build();
         }
         userService.deleteUser(id);
