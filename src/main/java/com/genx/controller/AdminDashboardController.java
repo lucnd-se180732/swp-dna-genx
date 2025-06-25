@@ -5,6 +5,7 @@ import com.genx.dto.AdminDashboardDto;
 import com.genx.service.interfaces.IAdminDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,7 @@ public class AdminDashboardController {
 
     private final IAdminDashboardService IAdmindashboardService;
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public ResponseEntity<AdminDashboardDto> getDashboard() {
         return ResponseEntity.ok(IAdmindashboardService.getDashboardData());

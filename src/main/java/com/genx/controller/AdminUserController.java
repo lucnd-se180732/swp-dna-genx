@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class AdminUserController {
 
     private final IUserService userService;
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/staff")
     public ResponseEntity<UserResponseDto> createStaff(@RequestBody UserRequestDto request) {
         if (request.getRole() != ERole.LAB_STAFF && request.getRole() != ERole.RECORDER_STAFF ) {
@@ -29,11 +31,13 @@ public class AdminUserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/staff/{id}")
     public ResponseEntity<UserResponseDto> updateStaff(@PathVariable Long id, @RequestBody UserRequestDto request) {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/status/{id}")
     public ResponseEntity<UserResponseDto> updateStatus(@PathVariable Long id,
                                                         @RequestParam boolean enabled,
@@ -42,6 +46,7 @@ public class AdminUserController {
     }
 
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/staff/{id}")
     public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
         UserResponseDto user = userService.getUserById(id);
@@ -52,6 +57,7 @@ public class AdminUserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/users/filter")
     public ResponseEntity<Page<UserResponseDto>> getUsersByFilter(
             @RequestParam(required = false) ERole role,
