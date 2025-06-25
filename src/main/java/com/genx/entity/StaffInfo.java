@@ -20,12 +20,12 @@ public class StaffInfo {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @Lob
-    private byte[] fingerprintData;
+    @Column(name = "fingerprint_image_url")
+    private String fingerprintImageUrl;
 
-    @Column(length = 100)
+    @Column(length = 255, nullable = true)
     private String avatar;
 
-    @Column(length = 100)
-    private LocalDateTime startdDate;
+    @Column(nullable = true)
+    private LocalDateTime startDate;
 }

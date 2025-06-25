@@ -1,4 +1,4 @@
-package com.genx.service.Impl;
+package com.genx.service.impl;
 
 import com.genx.dto.request.BlogRatingRequestDto;
 import com.genx.dto.response.BlogRatingResponseDto;

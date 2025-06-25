@@ -1,4 +1,4 @@
-package com.genx.service.Impl;
+package com.genx.service.impl;
 
 import com.genx.dto.AdminDashboardDto;
 import com.genx.enums.ERole;
@@ -28,7 +28,7 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
     @Override
     public AdminDashboardDto getDashboardData() {
         long totalUsers = userRepository.count();
-        long totalStaff = userRepository.countByRoleIn(List.of(ERole.LAB_STAFF, ERole.RECORD_STAFF));
+        long totalStaff = userRepository.countByRoleIn(List.of(ERole.LAB_STAFF, ERole.RECORDER_STAFF));
         long totalCustomers = userRepository.countByRole(ERole.CUSTOMER);
         long totalServices = serviceRepository.countByEnabled(true);
         long totalBlogs = blogRepository.count();

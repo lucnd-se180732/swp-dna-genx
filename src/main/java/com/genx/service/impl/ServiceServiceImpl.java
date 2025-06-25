@@ -1,4 +1,4 @@
-package com.genx.service.Impl;
+package com.genx.service.impl;
 
 
 
@@ -9,7 +9,6 @@ import com.genx.enums.ECaseType;
 import com.genx.mapper.ServiceMapper;
 import com.genx.repository.ServiceRepository;
 import com.genx.service.interfaces.IServiceService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
