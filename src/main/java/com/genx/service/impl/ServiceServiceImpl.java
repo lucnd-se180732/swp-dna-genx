@@ -7,7 +7,7 @@ import com.genx.dto.response.ServiceResponseDto;
 import com.genx.entity.Service;
 import com.genx.enums.ECaseType;
 import com.genx.mapper.ServiceMapper;
-import com.genx.repository.ServiceRepository;
+import com.genx.repository.IServiceRepository;
 import com.genx.service.interfaces.IServiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ServiceServiceImpl implements IServiceService {
 
     @Autowired
-    private final ServiceRepository serviceRepository;
+    private final IServiceRepository serviceRepository;
 
     @Autowired
     private final ServiceMapper mapper;

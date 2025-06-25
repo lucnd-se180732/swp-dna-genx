@@ -8,7 +8,6 @@ import com.genx.enums.EParticipantSampleStatus;
 import com.genx.mapper.ParticipantMapper;
 import com.genx.repository.IParticipantRepository;
 import com.genx.repository.IStaffInfoRepository;
-import com.genx.repository.IUserRepository;
 import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.IParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;

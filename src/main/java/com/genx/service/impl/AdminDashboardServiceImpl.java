@@ -3,8 +3,8 @@ package com.genx.service.impl;
 import com.genx.dto.AdminDashboardDto;
 import com.genx.enums.ERole;
 import com.genx.repository.BlogRepository;
-import com.genx.repository.ServiceRepository;
-import com.genx.repository.UserRepository;
+import com.genx.repository.IServiceRepository;
+import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IAdminDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,10 @@ import java.util.List;
 public class AdminDashboardServiceImpl implements IAdminDashboardService {
 
     @Autowired
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Autowired
-    private final ServiceRepository serviceRepository;
+    private final IServiceRepository serviceRepository;
 
     @Autowired
     private final BlogRepository blogRepository;

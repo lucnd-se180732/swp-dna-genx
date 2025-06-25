@@ -8,7 +8,7 @@ import com.genx.entity.BlogRate.Blog;
 import com.genx.entity.User;
 import com.genx.mapper.BlogMapper;
 import com.genx.repository.BlogRepository;
-import com.genx.repository.UserRepository;
+import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IBlogService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class BlogServiceImpl implements IBlogService {
     private final BlogRepository blogRepository;
 
     @Autowired
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Autowired
     private final BlogMapper blogMapper;

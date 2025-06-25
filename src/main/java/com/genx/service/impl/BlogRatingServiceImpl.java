@@ -7,7 +7,7 @@ import com.genx.entity.BlogRate.BlogRating;
 import com.genx.entity.User;
 import com.genx.repository.BlogRatingRepository;
 import com.genx.repository.BlogRepository;
-import com.genx.repository.UserRepository;
+import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IBlogRatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class BlogRatingServiceImpl implements IBlogRatingService {
     private final BlogRepository blogRepository;
 
     @Autowired
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Autowired
     private final BlogRatingRepository blogRatingRepository;
