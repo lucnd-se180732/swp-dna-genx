@@ -19,7 +19,6 @@ public class CustomerSampleCollectionController {
     public ParticipantResponse enterKitCodeByCustomer(@PathVariable("id") Long participantId,
                                                       @RequestBody KitCodeRequest request,
                                                       Authentication authentication) {
-        String username = authentication.getName();
         return participantService.enterKitCodeByCustomer(participantId, request);
     }
 }

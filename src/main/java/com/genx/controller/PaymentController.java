@@ -6,9 +6,10 @@ import com.genx.entity.Payment;
 import com.genx.entity.Booking;
 import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
+import com.genx.repository.IBookingRepository;
 import com.genx.repository.IPaymentRepository;
-import com.genx.service.BookingService;
 import com.genx.service.VNPayService;
+import com.genx.service.interfaces.IBookingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,22 +25,24 @@ import java.util.Map;
 public class PaymentController {
     @Autowired
     private VNPayService vnPayService;
+
     @Autowired
     private IPaymentRepository paymentRepository;
+
     @Autowired
     private PaymentMapper paymentMapper;
+
     @Autowired
-    private BookingService bookingService;
+    private IBookingService bookingService;
 
     @Value("${frontendUrl}")
     private String frontendRedirect;
 
-    @PostMapping("/create-payment")  // Keeping original endpoint
+    @PostMapping("/create-payment")
     public ResponseEntity<?> createPayment(@RequestBody BookingResponse bookingResponse, HttpServletRequest request) {
         try {
             Booking booking = bookingService.getFullRegistrationById(bookingResponse.getId());
 
-            // Check if registration can be paid
             if (booking.getPaymentStatus() == EPaymentStatus.CANCELLED) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Booking has been cancelled"));
@@ -70,13 +73,6 @@ public class PaymentController {
                 bookingService.updatePaymentStatus(orderId, EPaymentStatus.FAILED);
             }
 
-            String queryParams = params.entrySet().stream()
-                    .map(entry -> entry.getKey() + "=" + entry.getValue())
-                    .reduce((a, b) -> a + "&" + b)
-                    .orElse("");
-
-
-           // String redirectUrl = frontendRedirect + "/payment-result?" + queryParams;
             String vnpTxnRef = params.get("vnp_TxnRef");
             boolean isSuccess = paymentResponse != null && "00".equals(paymentResponse.getResponseCode());
             String redirectUrl = frontendRedirect + "/payment-result"

@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ISampleCollectionRepository extends JpaRepository<SampleCollection, Long> {
+
     Optional<SampleCollection> findByBooking_Id(Long bookingId);
+
     List<SampleCollection> findByStatus(ESampleCollectionStatus status);
 
 }

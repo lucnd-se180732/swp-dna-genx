@@ -8,7 +8,7 @@ import org.mapstruct.*;
 public interface AdnResultMapper {
 
     @Mapping(target = "participants", ignore = true)
-    @Mapping(target = "code", ignore = true) // Bỏ tự động, tự map thủ công
+    @Mapping(target = "code", ignore = true)
     AdnResultResponse toDto(AdnResult entity);
 
     AdnResult toEntity(AdnResultResponse dto);
@@ -18,10 +18,7 @@ public interface AdnResultMapper {
                             @MappingTarget AdnResultResponse dto,
                             @Context ParticipantMapper participantMapper) {
         if (entity.getBooking() != null) {
-            // Gán code từ booking
             dto.setCode(entity.getBooking().getCode());
-
-            //  Gán participants
             if (entity.getBooking().getParticipants() != null) {
                 dto.setParticipants(
                         entity.getBooking().getParticipants().stream()

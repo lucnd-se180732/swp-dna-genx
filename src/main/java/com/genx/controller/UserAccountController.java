@@ -22,21 +22,21 @@ public class UserAccountController {
     @Autowired
     private IUserService userService;
 
-    // Lấy thông tin profile của user đang đăng nhập
+    // Lấy thông tin profile
     @GetMapping("/profile")
     public UserProfileResponse getMyProfile() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userService.getUserProfileByUsername(username);
     }
 
-    // Cập nhật profile của user đang đăng nhập
+    // Cập nhật profile
     @PutMapping("/profile")
     public UserProfileResponse updateMyProfile(@RequestBody UpdateProfileRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userService.updateUserProfile(username, request);
     }
 
-    // Upload avatar ảnh đại diện (multipart/form-data)
+    // Upload avatar
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

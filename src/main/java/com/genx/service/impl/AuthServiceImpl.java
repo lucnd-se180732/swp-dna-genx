@@ -44,14 +44,9 @@ public class AuthServiceImpl implements IAuthService {
     @Autowired
     private IRefreshTokenRepository refreshTokenRepository;
 
-//    @Autowired
-//    private IUserService userService;
-
     @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private JwtConfig jwtConfig;
 
     @Autowired
     private ICustomerRepository customerRepository;
@@ -82,7 +77,7 @@ public class AuthServiceImpl implements IAuthService {
 
         userRepository.save(user);
         Customer customer = new Customer();
-        customer.setUser(user); // Hibernate sẽ gán luôn customer.id = savedUser.id
+        customer.setUser(user);
         customerRepository.save(customer);
 
         return "User registered successfully";
@@ -133,7 +128,6 @@ public class AuthServiceImpl implements IAuthService {
                 newUser.setAccountNonLocked(true);
                 User savedUser = userRepository.save(newUser);
 
-                // ✅ Sau đó mới tạo Customer gắn User
                 Customer customer = new Customer();
                 customer.setUser(savedUser);
                 customerRepository.save(customer);
@@ -177,12 +171,10 @@ public class AuthServiceImpl implements IAuthService {
 
         User user = optional.get();
 
-        // Kiểm tra xem đã hoàn tất chưa (tránh gọi lại)
         if (user.getPhoneNumber() != null) {
             throw new CustomException("Tài khoản đã được hoàn tất trước đó", 400);
         }
 
-        // Cập nhật các thông tin bổ sung
         user.setPhoneNumber(request.getPhoneNumber());
         user.setFullName(request.getFullName());
 

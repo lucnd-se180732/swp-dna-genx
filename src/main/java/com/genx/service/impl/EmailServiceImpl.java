@@ -37,7 +37,7 @@ public class EmailServiceImpl implements IEmailService {
 
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(htmlContent, true); // true = HTML content
+            helper.setText(htmlContent, true);
 
             mailSender.send(message);
         } catch (MessagingException e) {

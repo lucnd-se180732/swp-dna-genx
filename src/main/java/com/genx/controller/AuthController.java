@@ -38,6 +38,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.registerUser(request));
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = authService.login(request);
@@ -45,7 +46,7 @@ public class AuthController {
         // Gửi refreshToken vào cookie
         Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(secureCookie); // chỉ dùng HTTPSdeploy thực tế
+        refreshCookie.setSecure(secureCookie);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpiration / 1000); // 7 ngày
 
@@ -88,11 +89,12 @@ public class AuthController {
         response.addCookie(refreshCookie);
         return ResponseEntity.ok(loginResponse);
     }
+
     @PostMapping("/google-register")
     public ResponseEntity<ApiResponse<Boolean>> completeGoogleRegister(
             @RequestBody @Valid GoogleUserRequest request
     ) {
-        authService.completeGoogleRegister(request); // gọi hàm xử lý chính
+        authService.completeGoogleRegister(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<Boolean>builder()
                         .code(1000)

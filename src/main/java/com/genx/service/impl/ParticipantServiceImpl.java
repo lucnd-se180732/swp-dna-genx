@@ -84,6 +84,10 @@ public class ParticipantServiceImpl implements IParticipantService {
             throw new IllegalStateException("Mã kit đã được nhập trước đó.");
         }
 
+        if (request.getSampleType() == null) {
+            throw new IllegalArgumentException("Mẫu không được tìm thấy.");
+        }
+
         if (isCustomer) {
             String ownerUsername = participant.getBooking().getCustomer().getUser().getUsername();
             if (!currentUser.getUsername().equals(ownerUsername)) {

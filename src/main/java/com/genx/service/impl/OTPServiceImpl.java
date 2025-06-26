@@ -29,7 +29,7 @@ public class OTPServiceImpl implements IOTPService {
         String storedOtp = redisTemplate.opsForValue().get(key);
 
         if (storedOtp != null && storedOtp.equals(inputOtp)) {
-            redisTemplate.delete(key); // Xoá sau khi dùng
+            redisTemplate.delete(key);
             return true;
         }
         return false;

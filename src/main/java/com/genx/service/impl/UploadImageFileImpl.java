@@ -37,7 +37,7 @@ public class UploadImageFileImpl implements IUploadImageFile {
         log.info("▶ Uploading file: {} | publicId: {}", originalName, publicId);
 
         cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-                "public_id", "avatars/" + publicId,  // lưu trong folder "avatars/"
+                "public_id", "avatars/" + publicId,
                 "overwrite", true
         ));
 
