@@ -21,6 +21,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasAnyRole;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -57,7 +59,8 @@ public class SecurityConfig {
 
                         //  Endpoint yêu cầu login
                         .requestMatchers("/api/v1/auth/logout").authenticated()
-
+                        .requestMatchers("/api/notifications/**")
+                        .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF"))
                         //  Role-based access
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")

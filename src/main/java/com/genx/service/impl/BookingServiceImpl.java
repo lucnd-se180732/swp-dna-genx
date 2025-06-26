@@ -4,16 +4,14 @@ package com.genx.service.impl;
     import com.genx.dto.response.BookingResponse;
     import com.genx.dto.response.BookingSummaryResponse;
     import com.genx.entity.*;
-    import com.genx.enums.EBookingStatus;
-    import com.genx.enums.EParticipantSampleStatus;
-    import com.genx.enums.EPaymentStatus;
-    import com.genx.enums.ESampleCollectionStatus;
+    import com.genx.enums.*;
     import com.genx.mapper.BookingMapper;
 
 
     import com.genx.repository.*;
     import com.genx.security.SecurityUtil;
     import com.genx.service.interfaces.IBookingService;
+    import com.genx.service.interfaces.INotificationService;
     import jakarta.persistence.EntityNotFoundException;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.dao.DataIntegrityViolationException;
@@ -50,6 +48,13 @@ package com.genx.service.impl;
 
         @Autowired
         private IPaymentRepository paymentRepository;
+
+        @Autowired
+        private INotificationService notificationService;
+
+        @Autowired
+        private IUserRepository userRepository;
+
 
         @Override
         public Page<BookingResponse> getAllBookings(Pageable pageable) {
@@ -96,6 +101,17 @@ package com.genx.service.impl;
                 sc.setCollectedAt(LocalDateTime.now());
                 sampleCollectionRepository.save(sc);
             }
+
+            User customerUser = booking.getCustomer().getUser();
+            notificationService.sendNotification(
+                    customerUser,
+                    "Đơn đã được xác nhận",
+                    "Đơn đăng ký #" + booking.getCode() + " của bạn đã được xác nhận.",
+                    booking
+            );
+
+
+            notificationService.markOtherNotificationsAsHandled(booking, staffInfo.getUser());
 
             return bookingMapper.toResponse(bookingRepository.save(booking));
         }
@@ -150,6 +166,7 @@ package com.genx.service.impl;
     }
 
     @Override
+    @Transactional
     public BookingResponse createRegistration(BookingRequest bookingRequest) {
         try {
             Integer numParticipants = bookingRequest.getNumberOfParticipants();
@@ -171,24 +188,32 @@ package com.genx.service.impl;
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy customer từ user"));
             booking.setCustomer(customer);
 
-            // Gán booking cho các participants
+
             if (booking.getParticipants() != null) {
                 booking.getParticipants().forEach(p -> p.setBooking(booking));
             }
 
-
-            // B1: Lưu booking trước để có ID
             Booking savedBooking = bookingRepository.save(booking);
 
-            // B2: Tạo và lưu payment riêng
             Payment payment = new Payment();
             payment.setAmount(service.getPrice().intValue() * savedBooking.getNumberOfParticipants());
-            payment.setBooking(savedBooking); // Gán booking đã có ID
+            payment.setBooking(savedBooking);
             Payment savedPayment = paymentRepository.save(payment);
 
-            // B3: Gán lại payment vào booking nếu bạn dùng quan hệ 2 chiều
             savedBooking.setPayment(savedPayment);
-            bookingRepository.save(savedBooking); // cập nhật lại booking
+            bookingRepository.save(savedBooking);
+
+            List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
+            for (User staff : staffs) {
+                notificationService.sendNotification(
+                        staff,
+                        "Đơn đăng ký mới",
+                        "Khách hàng " + savedBooking.getCustomer().getUser().getFullName()
+                                + " vừa tạo đơn #" + savedBooking.getCode(),
+                        savedBooking
+                );
+            }
+
 
             return bookingMapper.toDTO(savedBooking);
         } catch (Exception e) {
@@ -218,7 +243,6 @@ package com.genx.service.impl;
             throw new IllegalStateException("Cannot update paid booking");
         }
 
-        // Fetch the service first
         com.genx.entity.Service service = serviceRepository.findById(bookingRequest.getServiceId())
                 .orElseThrow(() -> new EntityNotFoundException("Service not found with id: " + bookingRequest.getServiceId()));
 
@@ -237,7 +261,6 @@ package com.genx.service.impl;
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found"));
 
-        // Both field and setter name match exactly with entity
         booking.setPaymentStatus(EPaymentStatus.CANCELLED);
 
         try {

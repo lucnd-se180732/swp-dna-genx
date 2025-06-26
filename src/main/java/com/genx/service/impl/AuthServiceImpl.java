@@ -153,6 +153,9 @@ public class AuthServiceImpl implements IAuthService {
         String refreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
         jwtService.saveOrUpdateRefreshToken(user, refreshToken);
 
+        Customer customer = customerRepository.findByUser(user).orElse(null);
+        String avatar = customer != null ? customer.getAvatar() : null;
+
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .fullName(user.getFullName())
@@ -161,6 +164,7 @@ public class AuthServiceImpl implements IAuthService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .avatar(avatar)
                 .build();
     }
     public void completeGoogleRegister(GoogleUserRequest request) {
@@ -206,7 +210,6 @@ public class AuthServiceImpl implements IAuthService {
     public void logout(String refreshTokenFromCookie) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Trường hợp logout khi đang đăng nhập (có session trong SecurityContext)
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
             Long userId = userDetails.getUser().getId();
             int deleted = refreshTokenRepository.deleteByUserId(userId); // nên có return
@@ -219,7 +222,6 @@ public class AuthServiceImpl implements IAuthService {
             return;
         }
 
-        // Trường hợp không có session, nhưng có gửi refreshToken thủ công
         if (refreshTokenFromCookie != null && !refreshTokenFromCookie.isBlank()) {
             Claims claims;
             try {
@@ -240,8 +242,6 @@ public class AuthServiceImpl implements IAuthService {
 
             return;
         }
-
-        // Trường hợp không có cách nào xác định được người dùng
         throw new CustomException("Không thể xác định người dùng để logout", 400);
     }
 

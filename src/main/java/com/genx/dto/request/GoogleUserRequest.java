@@ -23,5 +23,4 @@ public class GoogleUserRequest{
     )
     private String phoneNumber;
 
-//    private String gender;
 }

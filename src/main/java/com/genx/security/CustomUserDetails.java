@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-
     private User user;
 
     @Override

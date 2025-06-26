@@ -31,13 +31,9 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
     @Autowired
     private IAdnResultRepository adnResultRepository;
-    @Autowired
-    private ISampleCollectionRepository sampleCollectionRepository;
-    @Autowired
-    private IBookingRepository bookingRepository;
 
     @Autowired
-    private AdnResultMapper adnResultMapper;
+    private IBookingRepository bookingRepository;
 
     @Override
     public AdnResult saveAdnResult(AdnResultRequest request) {
@@ -62,7 +58,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         PdfWriter.getInstance(document, out);
         document.open();
 
-        // Font for Vietnamese
         BaseFont baseFont = BaseFont.createFont("fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
         Font titleFont = new Font(baseFont, 16, Font.BOLD);
         Font headerFont = new Font(baseFont, 12, Font.BOLD);
@@ -91,12 +86,10 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(new Paragraph("Ngày hẹn: " + (booking.getAppointmentDate() != null ? booking.getAppointmentDate().toString() : "Không rõ"), normalFont));
         document.add(Chunk.NEWLINE);
 
-        // Case type logic
         String caseType = booking.getService().getCaseType().name();
         document.add(new Paragraph("Loại hồ sơ: " + (caseType != null ? caseType : "Không rõ"), normalFont));
         document.add(Chunk.NEWLINE);
 
-        // Participants
         document.add(new Paragraph("DANH SÁCH NGƯỜI THAM GIA", headerFont));
         PdfPTable participantTable;
         if ("ADMINISTRATIVE".equalsIgnoreCase(caseType)) {
@@ -146,7 +139,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(participantTable);
         document.add(Chunk.NEWLINE);
 
-        // Locus results
         document.add(new Paragraph("KẾT QUẢ XÉT NGHIỆM (THEO LOCUS)", headerFont));
         PdfPTable lociTable = new PdfPTable(2);
         lociTable.setWidthPercentage(100);
@@ -162,7 +154,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(lociTable);
         document.add(Chunk.NEWLINE);
 
-        // Conclusion
         Paragraph conclusion = new Paragraph("KẾT LUẬN:", headerFont);
         conclusion.setSpacingBefore(15f);
         document.add(conclusion);
