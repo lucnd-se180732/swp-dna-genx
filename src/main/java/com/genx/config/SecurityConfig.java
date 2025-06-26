@@ -61,7 +61,7 @@ public class SecurityConfig {
                         //  Role-based access
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/lab/**").hasRole("LAB_STAFF")
+                        .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
 
                         //  Các request còn lại bắt buộc phải đăng nhập

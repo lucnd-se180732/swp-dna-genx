@@ -8,5 +8,5 @@ public interface ISampleCollectionService {
     void sendSamplesToLab(Long bookingId);
 
     List<SampleCollectionHistoryResponse> getSampleCollectionHistory();
-
+     void completeSampleCollection(Long bookingId);
 }

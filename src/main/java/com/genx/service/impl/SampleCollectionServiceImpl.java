@@ -60,4 +60,17 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
                 .map(sampleCollectionMapper::toHistoryResponse)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    @Override
+    public void completeSampleCollection(Long bookingId) {
+        SampleCollection sampleCollection = sampleCollectionRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy quá trình thu mẫu cho booking ID: " + bookingId));
+
+        if (sampleCollection.getStatus() != ESampleCollectionStatus.SENT_TO_LAB) {
+            throw new IllegalStateException("Chỉ có thể hoàn tất khi trạng thái hiện tại là SENT_TO_LAB.");
+        }
+        sampleCollection.setStatus(ESampleCollectionStatus.COMPLETED);// nếu có field này
+        sampleCollectionRepository.save(sampleCollection);
+    }
 }

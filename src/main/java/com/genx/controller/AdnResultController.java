@@ -1,14 +1,21 @@
 
 package com.genx.controller;
 import com.genx.dto.request.AdnResultRequest;
+import com.genx.dto.response.BookingResponse;
 import com.genx.dto.response.ParticipantResponse;
 import com.genx.entity.AdnResult;
 import com.genx.entity.Participant;
+import com.genx.enums.ESampleCollectionStatus;
 import com.genx.repository.IParticipantRepository;
 import com.genx.service.interfaces.IAdnResultService;
+import com.genx.service.interfaces.IBookingService;
+import com.genx.service.interfaces.ISampleCollectionService;
 import com.genx.service.interfaces.IUploadImageFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,16 +31,24 @@ public class AdnResultController {
 
     @Autowired
     private IUploadImageFile uploadImageFile;
-    private final IAdnResultService IAdnResultService;
+
+    @Autowired
+    private  IAdnResultService adnResultService;
+
+    @Autowired
+     private IBookingService bookingService;
+
+    @Autowired
+    private ISampleCollectionService sampleCollectionService;
 
     @PostMapping
     public ResponseEntity<AdnResult> saveResult(@RequestBody AdnResultRequest request) {
-        return ResponseEntity.ok(IAdnResultService.saveAdnResult(request));
+        return ResponseEntity.ok(adnResultService.saveAdnResult(request));
     }
 
     @GetMapping("/export/{bookingId}")
     public ResponseEntity<byte[]> exportResult(@PathVariable Long bookingId) throws Exception {
-        byte[] pdf = IAdnResultService.exportResultToPdf(bookingId);
+        byte[] pdf = adnResultService.exportResultToPdf(bookingId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(ContentDisposition.attachment()
@@ -43,7 +58,7 @@ public class AdnResultController {
 
     @GetMapping("/booking/{id}/participants")
     public ResponseEntity<List<ParticipantResponse>> getParticipants(@PathVariable Long id) {
-        return ResponseEntity.ok(IAdnResultService.getParticipantsByBookingId(id));
+        return ResponseEntity.ok(adnResultService.getParticipantsByBookingId(id));
     }
 
     @PostMapping("/participants/{id}/fingerprint")
@@ -64,4 +79,31 @@ public class AdnResultController {
                     .body("Failed to upload image: " + e.getMessage());
         }
     }
+    @GetMapping("/get-all-sent-to-lab")
+    public ResponseEntity<List<BookingResponse>> getAllSentToLabBookings() {
+        List<BookingResponse> registrations = bookingService.getAllApplicationsSentToLab();
+        return ResponseEntity.ok(registrations);
+    }
+    @PostMapping("/complete-sample/{id}")
+    public ResponseEntity<String> completeSampleCollection(@PathVariable Long id) {
+        sampleCollectionService.completeSampleCollection(id);
+        return ResponseEntity.ok("Trạng thái thu mẫu đã được cập nhật thành COMPLETED.");
+    }
+
+    @GetMapping("/get-all-completed-booking")
+    public ResponseEntity<List<BookingResponse>> getAllCompletedLabBookings() {
+        List<BookingResponse> registrations = bookingService.getAllCompletedApplications();
+        return ResponseEntity.ok(registrations);
+    }
+    @GetMapping("/lab/search-bookings")
+    public ResponseEntity<Page<BookingResponse>> searchLabBookings(
+            @RequestParam ESampleCollectionStatus status,
+            @RequestParam(required = false) String code,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(bookingService.searchBySampleStatus(status, code, pageable));
+    }
+
 }

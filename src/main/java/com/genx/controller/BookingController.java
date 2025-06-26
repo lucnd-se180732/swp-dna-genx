@@ -4,7 +4,8 @@ package com.genx.controller;
 import com.genx.dto.request.BookingRequest;
 import com.genx.dto.response.BookingResponse;
 import com.genx.enums.EPaymentStatus;
-import com.genx.service.BookingService;
+
+import com.genx.service.interfaces.IBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ import java.util.List;
 //@CrossOrigin(origins = "*")
 public class BookingController {
     @Autowired
-    private BookingService bookingService;
+    private IBookingService bookingService;
 
   // In BookingController.java
   @PostMapping("/register")
@@ -27,7 +28,7 @@ public class BookingController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponse> getRegistration(@PathVariable Long id) {
-        BookingResponse registration = bookingService.getRegistrationById(id);
+        BookingResponse registration = bookingService.getBookingById(id);
         return ResponseEntity.ok(registration);
     }
 
@@ -47,4 +48,5 @@ public class BookingController {
         }
         return ResponseEntity.ok(registrations);
     }
+
 }

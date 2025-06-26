@@ -8,6 +8,7 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = ParticipantMapper.class)
 public interface BookingMapper {
+    @Mapping(target = "id", source = "id")
     @Mapping(source = "service.id", target = "serviceId")
     @Mapping(source = "collectionMethod", target = "collectionMethod")
     @Mapping(source = "paymentStatus", target = "paymentStatus")
@@ -17,6 +18,7 @@ public interface BookingMapper {
     @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
     @Mapping(source = "booking.createdAt", target = "createdAt")
+    @Mapping(target = "customerName", source = "customer.user.fullName")
     @Named("toDTO")
     BookingResponse toDTO(Booking booking);
 

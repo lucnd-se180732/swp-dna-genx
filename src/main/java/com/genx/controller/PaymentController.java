@@ -6,9 +6,10 @@ import com.genx.entity.Payment;
 import com.genx.entity.Booking;
 import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
+import com.genx.repository.IBookingRepository;
 import com.genx.repository.IPaymentRepository;
-import com.genx.service.BookingService;
 import com.genx.service.VNPayService;
+import com.genx.service.interfaces.IBookingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,12 @@ public class PaymentController {
     private IPaymentRepository paymentRepository;
     @Autowired
     private PaymentMapper paymentMapper;
+
     @Autowired
-    private BookingService bookingService;
+    private IBookingRepository bookingRepository;
+
+    @Autowired
+    private IBookingService bookingService;
 
     @Value("${frontendUrl}")
     private String frontendRedirect;
