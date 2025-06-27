@@ -38,4 +38,14 @@ public class AdnResult {
     @Column(name = "locus_value")
     private Map<String, String> lociResults = new HashMap<>();
 
+    @ManyToOne
+    @JoinColumn(name = "entered_by") // foreign key trong bảng Result
+    private StaffInfo enteredBy;
+
+    @Column(name = "tracking_code", unique = true, nullable = false)
+    private String trackingCode;
+
+    @Column(name = "tracking_password", nullable = false)
+    private String trackingPassword;
+
 }

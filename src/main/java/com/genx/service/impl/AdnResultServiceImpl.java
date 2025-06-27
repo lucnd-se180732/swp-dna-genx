@@ -6,11 +6,11 @@ import com.genx.dto.response.ParticipantResponse;
 import com.genx.entity.AdnResult;
 import com.genx.entity.Booking;
 import com.genx.entity.SampleCollection;
+import com.genx.entity.StaffInfo;
 import com.genx.enums.ESampleCollectionStatus;
-import com.genx.mapper.AdnResultMapper;
 import com.genx.repository.IAdnResultRepository;
 import com.genx.repository.IBookingRepository;
-import com.genx.repository.ISampleCollectionRepository;
+import com.genx.repository.IStaffInfoRepository;
 import com.genx.service.interfaces.IAdnResultService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
@@ -18,12 +18,14 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,18 +36,62 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
     @Autowired
     private IBookingRepository bookingRepository;
+    @Autowired
+    private IStaffInfoRepository staffInfoRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public AdnResult saveAdnResult(AdnResultRequest request) {
         Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        StaffInfo staff = staffInfoRepository.findById(request.getStaffId())
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        String trackingCode = generateTrackingCode();
+        String trackingPasswordPlain = generateTrackingPassword();
+        String trackingPasswordHash = passwordEncoder.encode(trackingPasswordPlain);
+
         AdnResult result = AdnResult.builder()
                 .booking(booking)
-                .createdAt(LocalDateTime.now())
-                .lociResults(request.getLociResults())
+                .enteredBy(staff)
+                .trackingCode(trackingCode)
+                .trackingPassword(trackingPasswordHash)
                 .conclusion(request.getConclusion())
+                .lociResults(request.getLociResults())
+                .createdAt(LocalDateTime.now())
                 .build();
+
         return adnResultRepository.save(result);
+    }
+
+    private String generateTrackingCode() {
+        return "DNA-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private String generateTrackingPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public AdnResult lookupResult(String trackingCode, String inputPassword) {
+        AdnResult result = adnResultRepository.findByTrackingCode(trackingCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả với mã tra cứu"));
+
+        // So sánh password người dùng nhập với bản đã mã hóa
+        if (!passwordEncoder.matches(inputPassword, result.getTrackingPassword())) {
+            throw new RuntimeException("Mật khẩu không đúng");
+        }
+
+        return result;
     }
 
     public byte[] exportResultToPdf(Long bookingId) throws Exception {

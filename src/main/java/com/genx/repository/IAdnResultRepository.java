@@ -11,4 +11,9 @@ import java.util.Optional;
 public interface IAdnResultRepository extends JpaRepository<AdnResult, Long> {
 
     Optional<AdnResult> findByBooking_Id(Long bookingId);
+
+    Optional<AdnResult> findByTrackingCodeAndTrackingPassword(String trackingCode, String trackingPassword);
+
+    Optional<AdnResult> findByTrackingCode(String trackingCode);
+
 }

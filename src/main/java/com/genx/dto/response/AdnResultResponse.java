@@ -9,6 +9,8 @@ import java.util.List;
 public class AdnResultResponse {
     private Long id;
     private String code;
+    private String trackingCode;
+    private String trackingPassword;
     private LocalDateTime createdAt;
     private Map<String, String> lociResults;
     private String conclusion;

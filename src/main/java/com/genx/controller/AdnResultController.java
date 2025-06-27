@@ -1,12 +1,14 @@
 
 package com.genx.controller;
 import com.genx.dto.request.AdnResultRequest;
+import com.genx.dto.response.AdnResultResponse;
 import com.genx.dto.response.BookingResponse;
 import com.genx.dto.response.ParticipantResponse;
 import com.genx.entity.AdnResult;
 import com.genx.entity.Participant;
 import com.genx.enums.ESampleCollectionStatus;
 import com.genx.repository.IParticipantRepository;
+import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.IAdnResultService;
 import com.genx.service.interfaces.IBookingService;
 import com.genx.service.interfaces.ISampleCollectionService;
@@ -42,8 +44,20 @@ public class AdnResultController {
     private ISampleCollectionService sampleCollectionService;
 
     @PostMapping
-    public ResponseEntity<AdnResult> saveResult(@RequestBody AdnResultRequest request) {
-        return ResponseEntity.ok(adnResultService.saveAdnResult(request));
+    public ResponseEntity<AdnResultResponse> saveResult(@RequestBody AdnResultRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId()
+                .orElseThrow(() -> new RuntimeException("Không xác định được người dùng"));
+        request.setStaffId(userId);
+
+        AdnResult result = adnResultService.saveAdnResult(request);
+        // Trả lại thông tin mã tra cứu
+        AdnResultResponse response = new AdnResultResponse();
+        response.setTrackingCode(result.getTrackingCode());
+        response.setTrackingPassword(result.getTrackingPassword());
+        response.setConclusion(result.getConclusion());
+        response.setLociResults(result.getLociResults());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/export/{bookingId}")
@@ -105,5 +119,6 @@ public class AdnResultController {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(bookingService.searchBySampleStatus(status, code, pageable));
     }
+
 
 }
