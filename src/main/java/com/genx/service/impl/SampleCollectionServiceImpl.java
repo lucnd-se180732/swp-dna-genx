@@ -2,11 +2,15 @@ package com.genx.service.impl;
 
 import com.genx.dto.response.SampleCollectionHistoryResponse;
 import com.genx.entity.SampleCollection;
+import com.genx.entity.User;
 import com.genx.enums.EParticipantSampleStatus;
+import com.genx.enums.ERole;
 import com.genx.enums.ESampleCollectionStatus;
 import com.genx.mapper.SampleCollectionMapper;
 import com.genx.repository.IParticipantRepository;
 import com.genx.repository.ISampleCollectionRepository;
+import com.genx.repository.IUserRepository;
+import com.genx.service.interfaces.INotificationService;
 import com.genx.service.interfaces.ISampleCollectionService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +31,12 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
 
     @Autowired
     private SampleCollectionMapper sampleCollectionMapper;
+
+    @Autowired
+    private IUserRepository userRepository;
+
+    @Autowired
+    private INotificationService notificationService;
 
 
     @Transactional
@@ -51,6 +61,21 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
         sampleCollection.setStatus(ESampleCollectionStatus.SENT_TO_LAB);
         sampleCollection.setConfirmedAt(LocalDateTime.now());
         sampleCollectionRepository.save(sampleCollection);
+
+        notifyLabStaffs(sampleCollection);
+    }
+
+    //ham thông báo cho nhân viên lab
+    private void notifyLabStaffs(SampleCollection sampleCollection) {
+        List<User> labStaffs = userRepository.findAllByRole(ERole.LAB_STAFF);
+        String message = "Đơn #" + sampleCollection.getBooking().getCode() + " đã được gửi mẫu đến phòng lab.";
+
+        notificationService.sendBulkNotification(
+                labStaffs,
+                "Mẫu mới gửi tới phòng lab",
+                message,
+                sampleCollection.getBooking()
+        );
     }
 
     @Override

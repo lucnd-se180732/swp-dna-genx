@@ -17,6 +17,8 @@ public interface INotificationRepository extends JpaRepository<Notification, Lon
 
     Long countByUserAndIsReadFalse(User user);
 
+    List<Notification> findByBookingIdAndUserIdNot(Long bookingId, Long excludedUserId);
+
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.booking.id = :bookingId AND n.user.id <> :exceptUserId")
     void markAllAsReadByBookingExceptUser(@Param("bookingId") Long bookingId, @Param("exceptUserId") Long exceptUserId);

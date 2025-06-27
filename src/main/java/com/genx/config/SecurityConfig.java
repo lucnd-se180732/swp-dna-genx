@@ -50,17 +50,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //  Public endpoints
                         .requestMatchers(
-                                "/api/adn-results",
+                                "/api/adn-results/lookup",
                                 "/api/v1/auth/**",
                                 "/api/vnpay/**",
                                 "/payment-result",
-                                "/test/**"
+                                "/ws/**"
                         ).permitAll()
 
                         //  Endpoint yêu cầu login
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/notifications/**")
-                        .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF"))
+                        .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF", "LAB_STAFF", "ADMIN"))
                         //  Role-based access
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")

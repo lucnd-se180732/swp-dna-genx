@@ -12,6 +12,4 @@ public class AdnResultRequest {
     private Map<String, String> lociResults;
     private String conclusion;
     private Long staffId;
-    private String trackingCode;
-    private String trackingPassword;
 }

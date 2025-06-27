@@ -1,6 +1,7 @@
 
 package com.genx.controller;
 import com.genx.dto.request.AdnResultRequest;
+import com.genx.dto.request.LookupResultRequest;
 import com.genx.dto.response.AdnResultResponse;
 import com.genx.dto.response.BookingResponse;
 import com.genx.dto.response.ParticipantResponse;
@@ -13,6 +14,7 @@ import com.genx.service.interfaces.IAdnResultService;
 import com.genx.service.interfaces.IBookingService;
 import com.genx.service.interfaces.ISampleCollectionService;
 import com.genx.service.interfaces.IUploadImageFile;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -118,6 +120,28 @@ public class AdnResultController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(bookingService.searchBySampleStatus(status, code, pageable));
+    }
+
+
+    @PostMapping("/lookup")
+    public ResponseEntity<AdnResultResponse> lookupResult(@RequestBody @Valid LookupResultRequest request) {
+        AdnResult result = adnResultService.lookupResult(
+                request.getTrackingCode(),
+                request.getTrackingPassword()
+        );
+
+        AdnResultResponse response = new AdnResultResponse();
+        response.setTrackingCode(result.getTrackingCode());
+        response.setConclusion(result.getConclusion());
+        response.setLociResults(result.getLociResults());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/resend-tracking-info/{bookingId}")
+    public ResponseEntity<String> resendTrackingInfo(@PathVariable Long bookingId) {
+        adnResultService.resendTrackingPassword(bookingId);
+        return ResponseEntity.ok("Mã tra cứu đã được gửi lại cho khách hàng.");
     }
 
 

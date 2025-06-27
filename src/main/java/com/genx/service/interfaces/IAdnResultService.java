@@ -16,4 +16,6 @@ public interface IAdnResultService {
     List<ParticipantResponse> getParticipantsByBookingId(Long id);
 
     AdnResult lookupResult(String trackingCode, String trackingPassword);
+
+    void resendTrackingPassword(Long bookingId);
 }

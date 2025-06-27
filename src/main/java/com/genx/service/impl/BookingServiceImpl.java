@@ -103,18 +103,18 @@ package com.genx.service.impl;
             }
 
             User customerUser = booking.getCustomer().getUser();
-            notificationService.sendNotification(
-                    customerUser,
-                    "Đơn đã được xác nhận",
-                    "Đơn đăng ký #" + booking.getCode() + " của bạn đã được xác nhận.",
-                    booking
-            );
-
+            notifyCustomerBookingConfirmed(customerUser, booking);
 
             notificationService.markOtherNotificationsAsHandled(booking, staffInfo.getUser());
 
             return bookingMapper.toResponse(bookingRepository.save(booking));
         }
+
+         private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {
+             String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận.", booking.getCode());
+             notificationService.sendNotification(customerUser, "Đơn đã được xác nhận", message, booking);
+        }
+
 
         @Override
         @Transactional
@@ -203,23 +203,31 @@ package com.genx.service.impl;
             savedBooking.setPayment(savedPayment);
             bookingRepository.save(savedBooking);
 
-            List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
-            for (User staff : staffs) {
-                notificationService.sendNotification(
-                        staff,
-                        "Đơn đăng ký mới",
-                        "Khách hàng " + savedBooking.getCustomer().getUser().getFullName()
-                                + " vừa tạo đơn #" + savedBooking.getCode(),
-                        savedBooking
-                );
-            }
-
+            notifyRecorderStaffs(savedBooking);
 
             return bookingMapper.toDTO(savedBooking);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create registration: " + e.getMessage(), e);
         }
     }
+
+
+    // Gửi thông báo cho tất cả nhân viên ghi nhận
+    private void notifyRecorderStaffs(Booking booking) {
+        List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
+
+        String customerName = booking.getCustomer().getUser().getFullName();
+        String message = "Khách hàng " + customerName + " vừa tạo đơn #" + booking.getCode();
+
+            notificationService.sendBulkNotification(
+                    staffs,
+                    "Đơn đăng ký mới",
+                    message,
+                    booking
+            );
+
+    }
+
 
     @Transactional
     @Override

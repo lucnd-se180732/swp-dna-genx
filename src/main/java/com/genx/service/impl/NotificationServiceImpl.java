@@ -60,7 +60,25 @@ public class NotificationServiceImpl implements INotificationService {
     @Override
     @Transactional
     public void markOtherNotificationsAsHandled(Booking booking, User handledBy) {
-        notificationRepository.markAllAsReadByBookingExceptUser(booking.getId(), handledBy.getId());
+        List<Notification> notis = notificationRepository
+                .findByBookingIdAndUserIdNot(booking.getId(), handledBy.getId());
+
+        for (Notification n : notis) {
+            String role = n.getUser().getRole().name();
+            if (!role.equals("CUSTOMER")) {
+                n.setRead(true);
+            }
+        }
+
+        notificationRepository.saveAll(notis);
+    }
+
+
+    @Override
+    public void sendBulkNotification(List<User> users, String title, String message, Booking booking) {
+        for (User user : users) {
+            sendNotification(user, title, message, booking);
+        }
     }
 
 
@@ -103,8 +121,12 @@ public class NotificationServiceImpl implements INotificationService {
     @Override
     public void sendNotificationToUser(User user, Notification notification) {
         NotificationResponse response = notificationMapper.toResponse(notification);
-        messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), response);
-    }
 
+        messagingTemplate.convertAndSendToUser(
+                user.getUsername(),
+                "/queue/notifications",
+                response
+        );
+    }
 
 }

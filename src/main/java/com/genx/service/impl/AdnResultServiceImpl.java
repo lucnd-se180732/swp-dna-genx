@@ -3,15 +3,14 @@ package com.genx.service.impl;
 
 import com.genx.dto.request.AdnResultRequest;
 import com.genx.dto.response.ParticipantResponse;
-import com.genx.entity.AdnResult;
-import com.genx.entity.Booking;
-import com.genx.entity.SampleCollection;
-import com.genx.entity.StaffInfo;
+import com.genx.entity.*;
 import com.genx.enums.ESampleCollectionStatus;
 import com.genx.repository.IAdnResultRepository;
 import com.genx.repository.IBookingRepository;
 import com.genx.repository.IStaffInfoRepository;
+import com.genx.security.AESUtil;
 import com.genx.service.interfaces.IAdnResultService;
+import com.genx.service.interfaces.INotificationService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
@@ -42,6 +41,12 @@ public class AdnResultServiceImpl implements IAdnResultService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AESUtil aesUtil;
+
+    @Autowired
+    private INotificationService notificationService;
+
     @Override
     public AdnResult saveAdnResult(AdnResultRequest request) {
         Booking booking = bookingRepository.findById(request.getBookingId())
@@ -53,18 +58,32 @@ public class AdnResultServiceImpl implements IAdnResultService {
         String trackingCode = generateTrackingCode();
         String trackingPasswordPlain = generateTrackingPassword();
         String trackingPasswordHash = passwordEncoder.encode(trackingPasswordPlain);
+        String trackingPasswordEncrypted = aesUtil.encrypt(trackingPasswordPlain);
 
         AdnResult result = AdnResult.builder()
                 .booking(booking)
                 .enteredBy(staff)
                 .trackingCode(trackingCode)
                 .trackingPassword(trackingPasswordHash)
+                .trackingPasswordEncrypted(trackingPasswordEncrypted)
                 .conclusion(request.getConclusion())
                 .lociResults(request.getLociResults())
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return adnResultRepository.save(result);
+        AdnResult saved = adnResultRepository.save(result);
+
+        User customer = booking.getCustomer().getUser();
+        String title = "Mã tra cứu kết quả ADN đã sẵn sàng";
+        String message = "Mã tra cứu: " + saved.getTrackingCode() +
+                "\n➡️ Mật khẩu: " + trackingPasswordPlain +
+                "\n📦 Mã hồ sơ (booking): " + booking.getCode() +
+                "\nBạn có thể dùng thông tin này để xem kết quả xét nghiệm ADN của bạn.";
+
+        notificationService.sendNotification(customer, title, message, booking);
+
+
+        return saved;
     }
 
     private String generateTrackingCode() {
@@ -86,7 +105,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         AdnResult result = adnResultRepository.findByTrackingCode(trackingCode)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả với mã tra cứu"));
 
-        // So sánh password người dùng nhập với bản đã mã hóa
         if (!passwordEncoder.matches(inputPassword, result.getTrackingPassword())) {
             throw new RuntimeException("Mật khẩu không đúng");
         }
@@ -235,5 +253,26 @@ public class AdnResultServiceImpl implements IAdnResultService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void resendTrackingPassword(Long bookingId) {
+        AdnResult result = adnResultRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả"));
+
+
+        String decryptedPassword = aesUtil.decrypt(result.getTrackingPasswordEncrypted());
+
+        Booking booking = result.getBooking();
+        User customer = booking.getCustomer().getUser();
+
+        String message = "🔁 Gửi lại mã tra cứu ADN:\n" +
+                "Mã tra cứu: *" + result.getTrackingCode() + "*\n" +
+                "Mật khẩu: *" + decryptedPassword + "*\n" +
+                "Vui lòng sử dụng thông tin trên để tra cứu kết quả xét nghiệm.";
+
+        notificationService.sendNotification(customer, "Gửi lại mã tra cứu ADN", message, booking);
+    }
+
+
 
 }

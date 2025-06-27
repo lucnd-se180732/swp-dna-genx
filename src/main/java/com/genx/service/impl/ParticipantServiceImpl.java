@@ -1,7 +1,9 @@
 package com.genx.service.impl;
 
 import com.genx.dto.request.KitCodeRequest;
+import com.genx.dto.response.NotificationResponse;
 import com.genx.dto.response.ParticipantResponse;
+import com.genx.entity.Booking;
 import com.genx.entity.Participant;
 import com.genx.entity.User;
 import com.genx.enums.EBookingStatus;
@@ -12,6 +14,7 @@ import com.genx.repository.IParticipantRepository;
 import com.genx.repository.IStaffInfoRepository;
 import com.genx.repository.IUserRepository;
 import com.genx.security.SecurityUtil;
+import com.genx.service.interfaces.INotificationService;
 import com.genx.service.interfaces.IParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,10 @@ public class ParticipantServiceImpl implements IParticipantService {
     @Autowired
     private ParticipantMapper participantMapper;
 
+    @Autowired
+    private INotificationService notificationService;
+
+
 
     @Override
     public ParticipantResponse sendKitToCustomer(Long participantId) {
@@ -39,7 +46,29 @@ public class ParticipantServiceImpl implements IParticipantService {
 
         participant.setSampleStatus(EParticipantSampleStatus.KIT_SENT);
         participant.setKitEnteredAt(LocalDateTime.now());
-        return participantMapper.toResponse(participantRepository.save(participant));
+        Participant saved = participantRepository.save(participant);
+
+        checkAndNotifyIfAllKitSent(saved.getBooking());
+
+        return participantMapper.toResponse(saved);
+    }
+
+    private void checkAndNotifyIfAllKitSent(Booking booking) {
+        boolean allKitSent = participantRepository.findByBooking_Id(booking.getId())
+                .stream()
+                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.KIT_SENT);
+
+        if (allKitSent) {
+            User customer = booking.getCustomer().getUser();
+
+            notificationService.sendNotification(
+                    customer,
+                    "Tất cả bộ kit đã được gửi đi",
+                    "Tất cả các bộ kit trong đơn đăng ký" +  booking.getCode() + "đã được gửi đến địa chỉ của bạn. \n" +
+                            "Vui lòng truy cập trang \"Hướng dẫn thu mẫu\" để chuẩn bị đúng cách khi nhận được bộ kit.\n",
+                    booking
+            );
+        }
     }
 
 
@@ -58,6 +87,23 @@ public class ParticipantServiceImpl implements IParticipantService {
 
         return handleEnterKitCode(participantId, request, currentUser, true);
     }
+
+    private void notifyStaffIfAllKitsEnteredByCustomer(Booking booking) {
+        boolean allKitsEntered = participantRepository.findByBooking_Id(booking.getId())
+                .stream()
+                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.WAITING_FOR_COLLECTION);
+
+        if (allKitsEntered && booking.getCollectionMethod() == ECollectionMethod.HOME) {
+            User staff = booking.getRecordStaff().getUser();
+            notificationService.sendNotification(
+                    staff,
+                    "Khách đã thu mẫu xong",
+                    "Đơn #" + booking.getCode() + " đã được khách hoàn tất thu mẫu. Vui lòng kiểm tra và xử lý mẫu gửi đến.",
+                    booking
+            );
+        }
+    }
+
 
     @Override
     public ParticipantResponse confirmCollectedSample(Long participantId) {
@@ -121,7 +167,13 @@ public class ParticipantServiceImpl implements IParticipantService {
             }
         }
 
-        return participantMapper.toResponse(participantRepository.save(participant));
+        Participant saved = participantRepository.save(participant);
+
+        if (isCustomer && participant.getBooking().getCollectionMethod() == ECollectionMethod.HOME) {
+            notifyStaffIfAllKitsEnteredByCustomer(participant.getBooking());
+        }
+
+        return participantMapper.toResponse(saved);
     }
 
 }

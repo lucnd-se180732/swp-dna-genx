@@ -24,4 +24,7 @@ public interface INotificationService {
 
     void markOtherNotificationsAsHandled(Booking booking, User handledBy);
 
+    void sendBulkNotification(List<User> users, String title, String message, Booking booking);
+
+
 }

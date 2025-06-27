@@ -39,7 +39,7 @@ public class AdnResult {
     private Map<String, String> lociResults = new HashMap<>();
 
     @ManyToOne
-    @JoinColumn(name = "entered_by") // foreign key trong bảng Result
+    @JoinColumn(name = "entered_by")
     private StaffInfo enteredBy;
 
     @Column(name = "tracking_code", unique = true, nullable = false)
@@ -47,5 +47,8 @@ public class AdnResult {
 
     @Column(name = "tracking_password", nullable = false)
     private String trackingPassword;
+
+    @Column(name = "tracking_password_encrypted")
+    private String trackingPasswordEncrypted;
 
 }
