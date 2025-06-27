@@ -31,7 +31,7 @@ public class StaffSampleCollectionController {
 
     @PutMapping("/participants/{id}/kit-code")
     public ParticipantResponse enterKitCode(@PathVariable("id") Long participantId,
-                                            @RequestBody KitCodeRequest request) {
+                                            @ModelAttribute KitCodeRequest request) {
         return participantService.enterKitCodeByStaff(participantId, request);
     }
 

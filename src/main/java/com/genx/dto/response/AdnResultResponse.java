@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class AdnResultResponse {
     private Long id;
+    private Long bookingId;
     private String code;
     private String trackingCode;
     private String trackingPassword;

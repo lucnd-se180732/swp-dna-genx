@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/vnpay/**",
                                 "/payment-result",
-                                "/ws/**"
+                                "/ws/**",
+                                "/api/adn-results/export/{bookingId}"
                         ).permitAll()
 
                         //  Endpoint yêu cầu login

@@ -134,6 +134,8 @@ public class AdnResultController {
         response.setTrackingCode(result.getTrackingCode());
         response.setConclusion(result.getConclusion());
         response.setLociResults(result.getLociResults());
+        response.setBookingId(result.getBooking().getId());
+        response.setCreatedAt(result.getCreatedAt());
 
         return ResponseEntity.ok(response);
     }

@@ -16,9 +16,11 @@ import com.genx.repository.IUserRepository;
 import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.INotificationService;
 import com.genx.service.interfaces.IParticipantService;
+import com.genx.service.interfaces.IUploadImageFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Service
@@ -33,6 +35,8 @@ public class ParticipantServiceImpl implements IParticipantService {
     @Autowired
     private INotificationService notificationService;
 
+    @Autowired
+    private IUploadImageFile uploadImageFile;
 
 
     @Override
@@ -165,6 +169,16 @@ public class ParticipantServiceImpl implements IParticipantService {
                 case HOME -> participant.setSampleStatus(EParticipantSampleStatus.WAITING_FOR_COLLECTION);
                 case HOSPITAL -> participant.setSampleStatus(EParticipantSampleStatus.CONFIRMED);
             }
+        }
+
+        if (request.getFingerprintImage() != null && !request.getFingerprintImage().isEmpty()) {
+            String imageUrl = null;
+            try {
+                imageUrl = uploadImageFile.uploadImageFile(request.getFingerprintImage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            participant.setFingerprintImageUrl(imageUrl);
         }
 
         Participant saved = participantRepository.save(participant);
