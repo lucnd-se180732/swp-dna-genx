@@ -8,6 +8,7 @@ import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
 import com.genx.repository.IPaymentRepository;
 import com.genx.repository.IBookingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class VNPayService {
     private final IBookingRepository IBookingRepository;
     private final IPaymentRepository IPaymentRepository;
     private final PaymentMapper paymentMapper;
+
+    @Autowired
+    private IPaymentRepository paymentRepository;
 
     @Autowired
     public VNPayService(VNPayConfig vnPayConfig,
@@ -257,5 +261,10 @@ public class VNPayService {
         booking.setPayment(payment);
         booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
         IBookingRepository.save(booking);
+    }
+
+    public Payment getPaymentByOrderId(String orderId) {
+        return paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thanh toán với orderId: " + orderId));
     }
 }

@@ -23,4 +23,5 @@ public class ParticipantResponse {
     private String kitEnteredByName;
     private LocalDateTime kitEnteredAt;
     private ESampleType sampleType;
+    private String fingerprintImageUrl;
 }

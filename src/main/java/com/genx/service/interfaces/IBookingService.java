@@ -22,13 +22,11 @@ public interface IBookingService {
 
     BookingResponse confirmBooking(Long id);
 
-    BookingResponse cancelBooking(Long id, String reason);
-
     Page<BookingResponse> searchBookings(EBookingStatus status, Long id, Pageable pageable);
 
     Booking getFullRegistrationById(Long id);
 
-    List<BookingResponse> getRegistrationsByStatus(EPaymentStatus status);
+    Page<BookingResponse> getRegistrationsByStatus(EPaymentStatus status, Pageable pageable);
 
     List<BookingResponse> getAllApplicationsSentToLab();
 
@@ -40,7 +38,7 @@ public interface IBookingService {
 
     BookingResponse cancelRegistration(Long id);
 
-    List<BookingResponse> getAllRegistrations();
+    Page<BookingResponse> getAllRegistrations(Pageable pageable);
 
     BookingResponse updatePaymentStatus(String orderId, EPaymentStatus status);
 

@@ -35,6 +35,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
     @Autowired
     private IBookingRepository bookingRepository;
+
     @Autowired
     private IStaffInfoRepository staffInfoRepository;
 

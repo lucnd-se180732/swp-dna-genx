@@ -47,9 +47,10 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
 
     Optional<Booking> findByPaymentOrderId(String orderId);
 
-    List<Booking> findByCustomerId(Long customerId);
+    Page<Booking> findByCustomerId(Long customerId, Pageable pageable);
 
-    List<Booking> findByCustomerIdAndPaymentStatus(Long customerId, EPaymentStatus status);
+    Page<Booking> findByCustomerIdAndPaymentStatus(Long customerId, EPaymentStatus status, Pageable pageable);
+
     List<Booking> findBySampleCollectionStatus(ESampleCollectionStatus status);
 
     boolean existsByCode(String code);

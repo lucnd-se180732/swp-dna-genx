@@ -17,8 +17,10 @@ import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.INotificationService;
 import com.genx.service.interfaces.IParticipantService;
 import com.genx.service.interfaces.IUploadImageFile;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -68,12 +70,26 @@ public class ParticipantServiceImpl implements IParticipantService {
             notificationService.sendNotification(
                     customer,
                     "Tất cả bộ kit đã được gửi đi",
-                    "Tất cả các bộ kit trong đơn đăng ký" +  booking.getCode() + "đã được gửi đến địa chỉ của bạn. \n" +
+                    "Tất cả các bộ kit trong đơn đăng ký " +  booking.getCode() + " đã được gửi đến địa chỉ của bạn. \n" +
                             "Vui lòng truy cập trang \"Hướng dẫn thu mẫu\" để chuẩn bị đúng cách khi nhận được bộ kit.\n",
                     booking
             );
         }
     }
+
+    @Override
+    public String uploadFingerprintImage(Long participantId, MultipartFile file) throws IOException {
+        String url = uploadImageFile.uploadImageFile(file);
+
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy participant với ID: " + participantId));
+
+        participant.setFingerprintImageUrl(url);
+        participantRepository.save(participant);
+
+        return url;
+    }
+
 
 
     @Override

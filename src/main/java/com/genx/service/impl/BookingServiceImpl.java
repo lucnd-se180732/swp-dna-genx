@@ -88,6 +88,11 @@ package com.genx.service.impl;
             }
             Booking booking = bookingRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Booking not found with id: " + id));
+
+            if (booking.getStatus() != EBookingStatus.PENDING) {
+                throw new IllegalStateException("Chỉ có thể xác nhận đơn đang ở trạng thái PENDING");
+            }
+
             booking.setStatus(EBookingStatus.CONFIRMED);
             booking.setRecordStaff(staffInfo);
             for (Participant p : booking.getParticipants()) {
@@ -111,20 +116,10 @@ package com.genx.service.impl;
         }
 
          private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {
-             String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận.", booking.getCode());
+             String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận. ", booking.getCode());
              notificationService.sendNotification(customerUser, "Đơn đã được xác nhận", message, booking);
         }
 
-
-        @Override
-        @Transactional
-        public BookingResponse cancelBooking(Long id, String reason) {
-            Booking booking = bookingRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Booking not found with id: " + id));
-            booking.setStatus(EBookingStatus.CANCELED);
-            booking.setNote(reason);
-            return bookingMapper.toResponse(bookingRepository.save(booking));
-        }
 
         @Override
         public Page<BookingResponse> searchBookings(EBookingStatus status, Long bookingId, Pageable pageable) {
@@ -139,13 +134,12 @@ package com.genx.service.impl;
     }
 
     @Override
-    public List<BookingResponse> getRegistrationsByStatus(EPaymentStatus status) {
+    public Page<BookingResponse> getRegistrationsByStatus(EPaymentStatus status, Pageable pageable) {
         Long customerId = SecurityUtil.getCurrentUserId()
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user đang đăng nhập"));
 
-        return bookingRepository.findByCustomerIdAndPaymentStatus(customerId, status).stream()
-                .map(bookingMapper::toDTO)
-                .collect(Collectors.toList());
+        return bookingRepository.findByCustomerIdAndPaymentStatus(customerId, status, pageable)
+                .map(bookingMapper::toDTO);
     }
 
     @Override
@@ -270,9 +264,22 @@ package com.genx.service.impl;
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found"));
 
         booking.setPaymentStatus(EPaymentStatus.CANCELLED);
+        booking.setStatus(EBookingStatus.CANCELED);
 
         try {
             Booking saved = bookingRepository.save(booking);
+
+            if (booking.getRecordStaff() != null && booking.getRecordStaff().getUser() != null) {
+                User staffUser = booking.getRecordStaff().getUser();
+                String message = String.format("Đơn đăng ký #%s của khách hàng đã bị hủy. ", booking.getCode());
+                notificationService.sendNotification(
+                        staffUser,
+                        "Đơn đã bị hủy",
+                        message,
+                        booking
+                );
+            }
+
             return bookingMapper.toDTO(saved);
         } catch (DataIntegrityViolationException e) {
             throw new IllegalStateException("Cannot cancel this booking. Invalid status transition.");
@@ -280,15 +287,14 @@ package com.genx.service.impl;
     }
 
     @Override
-    public List<BookingResponse> getAllRegistrations() {
+    public Page<BookingResponse> getAllRegistrations(Pageable pageable) {
         Long customerId = SecurityUtil.getCurrentUserId()
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user đang đăng nhập"));
 
-        return bookingRepository.findByCustomerId(customerId)
-                .stream()
-                .map(bookingMapper::toDTO)
-                .collect(Collectors.toList());
+        return bookingRepository.findByCustomerId(customerId, pageable)
+                .map(bookingMapper::toDTO);
     }
+
     @Override
         public Optional<Booking> getBookingByPayment(Payment payment) {
         return bookingRepository.findByPayment(payment);

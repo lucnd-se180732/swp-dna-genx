@@ -2,20 +2,16 @@ package com.genx.controller;
 
 
 import com.genx.dto.request.BookingRequest;
-import com.genx.dto.request.LookupResultRequest;
-import com.genx.dto.response.AdnResultResponse;
 import com.genx.dto.response.BookingResponse;
-import com.genx.entity.AdnResult;
 import com.genx.enums.EPaymentStatus;
-
-import com.genx.repository.IAdnResultRepository;
 import com.genx.service.interfaces.IBookingService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/registrations")
@@ -42,15 +38,18 @@ public class BookingController {
         return ResponseEntity.ok(cancelledRegistration);
     }
     @GetMapping
-    public ResponseEntity<List<BookingResponse>> getAllRegistrations(
-            @RequestParam(required = false) EPaymentStatus status) {
-        List<BookingResponse> registrations;
+    public ResponseEntity<Page<BookingResponse>> getAllRegistrations(
+            @RequestParam(required = false) EPaymentStatus status,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<BookingResponse> registrations;
         if (status != null) {
-            registrations = bookingService.getRegistrationsByStatus(status);
+            registrations = bookingService.getRegistrationsByStatus(status, pageable);
         } else {
-            registrations = bookingService.getAllRegistrations();
+            registrations = bookingService.getAllRegistrations(pageable);
         }
         return ResponseEntity.ok(registrations);
     }
+
 
 }

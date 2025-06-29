@@ -26,4 +26,5 @@ public class BookingResponse {
     private ESampleCollectionStatus sampleCollectionStatus;
     private LocalDateTime createdAt;
     private EBookingStatus status;
+    private ECaseType caseType;
 }

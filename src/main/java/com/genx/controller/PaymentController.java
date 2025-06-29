@@ -10,6 +10,7 @@ import com.genx.repository.IBookingRepository;
 import com.genx.repository.IPaymentRepository;
 import com.genx.service.VNPayService;
 import com.genx.service.interfaces.IBookingService;
+import com.genx.service.interfaces.IPaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class PaymentController {
     private VNPayService vnPayService;
 
     @Autowired
-    private IPaymentRepository paymentRepository;
+    private IPaymentService paymentService;
 
     @Autowired
     private PaymentMapper paymentMapper;
@@ -96,8 +97,7 @@ public class PaymentController {
     @GetMapping("/payment-status/{orderId}")
     public ResponseEntity<?> getPaymentStatus(@PathVariable String orderId) {
         try {
-            Payment payment = paymentRepository.findByOrderId(orderId)
-                    .orElseThrow(() -> new RuntimeException("Payment not found"));
+            Payment payment = paymentService.getPaymentByOrderId(orderId);
 
             Booking booking = bookingService.getBookingByPayment(payment)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));

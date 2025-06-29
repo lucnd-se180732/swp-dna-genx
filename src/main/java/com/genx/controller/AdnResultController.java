@@ -10,10 +10,8 @@ import com.genx.entity.Participant;
 import com.genx.enums.ESampleCollectionStatus;
 import com.genx.repository.IParticipantRepository;
 import com.genx.security.SecurityUtil;
-import com.genx.service.interfaces.IAdnResultService;
-import com.genx.service.interfaces.IBookingService;
-import com.genx.service.interfaces.ISampleCollectionService;
-import com.genx.service.interfaces.IUploadImageFile;
+import com.genx.service.interfaces.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdnResultController {
     @Autowired
-    private IParticipantRepository participantRepository;
-
-    @Autowired
-    private IUploadImageFile uploadImageFile;
+    private IParticipantService participantService;
 
     @Autowired
     private  IAdnResultService adnResultService;
@@ -82,17 +77,13 @@ public class AdnResultController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         try {
-            String url = uploadImageFile.uploadImageFile(file);  // service upload ảnh lên Cloudinary
-            Participant participant = participantRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy participant"));
-
-            participant.setFingerprintImageUrl(url);
-            participantRepository.save(participant);
-
+            String url = participantService.uploadFingerprintImage(id, file);
             return ResponseEntity.ok(url);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to upload image: " + e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
     @GetMapping("/get-all-sent-to-lab")

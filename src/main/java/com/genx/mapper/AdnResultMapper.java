@@ -13,19 +13,4 @@ public interface AdnResultMapper {
 
     AdnResult toEntity(AdnResultResponse dto);
 
-//    @AfterMapping
-//    default void mapDetails(AdnResult entity,
-//                            @MappingTarget AdnResultResponse dto,
-//                            @Context ParticipantMapper participantMapper) {
-//
-//        if (entity.getBooking() != null && entity.getBooking().getParticipants() != null) {
-//            dto.setParticipants(
-//                    entity.getBooking().getParticipants().stream()
-//                            .map(participantMapper::toResponse)
-//                            .toList()
-//            );
-//        }
-//        dto.setTrackingCode(entity.getTrackingCode());
-//        dto.setTrackingPassword(entity.getTrackingPassword());
-//    }
 }
