@@ -11,6 +11,7 @@ public interface BlogMapper {
     @Mapping(target = "blogId", source = "blogId")
     @Mapping(target = "authorName", source = "createdBy.fullName")
     @Mapping(target = "viewCount", source = "viewCount")
+    @Mapping(target = "content", source = "content")
     BlogResponseDto toResponseDto(Blog blog);
 
     @Mapping(target = "blogId", ignore = true)

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class BlogResponseDto {
     private Long blogId;
     private String title;
+    private String content;
     private String shortDescription;
     private String thumbnailUrl;
     private String slug;

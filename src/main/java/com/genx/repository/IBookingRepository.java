@@ -44,4 +44,17 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findTop5ByOrderByCreatedAtDesc();
 
 
+    @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND DATE(b.createdAt) = CURRENT_DATE")
+    Optional<Long> sumTodayRevenue(@Param("status") EPaymentStatus status);
+
+    @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND MONTH(b.createdAt) = :month AND YEAR(b.createdAt) = :year")
+    Optional<Long> sumMonthlyRevenue(@Param("status") EPaymentStatus status,
+                                     @Param("month") int month,
+                                     @Param("year") int year);
+
+
+    long countByPaymentStatus(EPaymentStatus status);
+
+
+
 }

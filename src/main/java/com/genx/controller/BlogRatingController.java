@@ -14,6 +14,7 @@ public class BlogRatingController {
 
     private final IBlogRatingService blogRatingService;
 
+
     @PostMapping("/rate")
     public ResponseEntity<Void> rateBlog(@RequestBody BlogRatingRequestDto dto,
                                          @RequestParam Long userId) {

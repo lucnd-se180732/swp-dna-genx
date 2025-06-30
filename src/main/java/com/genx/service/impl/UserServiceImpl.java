@@ -15,6 +15,7 @@ import com.genx.mapper.UserAccountMapper;
 import com.genx.mapper.UserMapper;
 import com.genx.repository.ICustomerRepository;
 import com.genx.repository.IStaffInfoRepository;
+import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IUploadImageFile;
 import com.genx.service.interfaces.IUserService;
 import jakarta.transaction.Transactional;

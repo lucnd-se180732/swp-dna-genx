@@ -1,9 +1,14 @@
 package com.genx.dto;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
+import java.math.BigDecimal;
+
+
+@NoArgsConstructor
+@Setter
+@Getter
 @Data
 @AllArgsConstructor
 public class AdminDashboardDto {
@@ -13,6 +18,10 @@ public class AdminDashboardDto {
     private long totalCustomers;
     private long totalServices;
     private long totalBlogs;
+    private long totalPayments;
+    private long totalRevenue;
+    private long todayRevenue;
+    private long monthlyRevenue;
 
     // private long totalBookingsToday;
     // private BigDecimal totalRevenueToday;

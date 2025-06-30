@@ -25,7 +25,7 @@ public class UserResponseDto {
     private String avatar;
     private String fingerprintImageUrl;
     private LocalDateTime startDate;
-    private EAuthProvider authProvider;
+
 
 
 }

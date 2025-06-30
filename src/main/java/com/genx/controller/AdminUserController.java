@@ -30,7 +30,7 @@ public class AdminUserController {
         UserResponseDto response = userService.createStaff(request);
         return ResponseEntity.ok(response);
     }
-
+    
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/staff/{id}")
     public ResponseEntity<UserResponseDto> updateStaff(@PathVariable Long id, @RequestBody UserRequestDto request) {

@@ -2,14 +2,15 @@ package com.genx.service.impl;
 
 import com.genx.dto.AdminDashboardDto;
 import com.genx.enums.ERole;
-import com.genx.repository.BlogRepository;
-import com.genx.repository.IServiceRepository;
-import com.genx.repository.IUserRepository;
+import com.genx.enums.EPaymentStatus;
+import com.genx.mapper.BookingMapper;
+import com.genx.repository.*;
 import com.genx.service.interfaces.IAdminDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -25,6 +26,15 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
     @Autowired
     private final BlogRepository blogRepository;
 
+    @Autowired
+    private final IPaymentRepository paymentRepository;
+
+    @Autowired
+    private final IBookingRepository bookingRepository;
+
+    @Autowired
+    private final BookingMapper bookingMapper;
+
     @Override
     public AdminDashboardDto getDashboardData() {
         long totalUsers = userRepository.count();
@@ -32,13 +42,29 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
         long totalCustomers = userRepository.countByRole(ERole.CUSTOMER);
         long totalServices = serviceRepository.countByEnabled(true);
         long totalBlogs = blogRepository.count();
+        long totalPayments = bookingRepository.countByPaymentStatus(EPaymentStatus.PAID);
+        long totalRevenue = paymentRepository.sumSuccessfulPaymentAmount().orElse(0L);
+
+        // Doanh thu hôm nay và theo tháng từ Booking
+        long todayRevenue = bookingRepository
+                .sumTodayRevenue(EPaymentStatus.PAID)
+                .orElse(0L);
+
+        LocalDate now = LocalDate.now();
+        long monthlyRevenue = bookingRepository
+                .sumMonthlyRevenue(EPaymentStatus.PAID, now.getMonthValue(), now.getYear())
+                .orElse(0L);
 
         return new AdminDashboardDto(
                 totalUsers,
                 totalStaff,
                 totalCustomers,
                 totalServices,
-                totalBlogs
+                totalBlogs,
+                totalPayments,
+                totalRevenue,
+                todayRevenue,
+                monthlyRevenue
         );
     }
 }

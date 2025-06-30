@@ -27,13 +27,13 @@ public class AdminServiceController {
         return ResponseEntity.ok(serviceService.createService(dto));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+
     @GetMapping
     public ResponseEntity<List<ServiceResponseDto>> getAll() {
         return ResponseEntity.ok(serviceService.getAllServices());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+
     @GetMapping("/filter")
     public ResponseEntity<List<ServiceResponseDto>> getByType(@RequestParam ECaseType type) {
         return ResponseEntity.ok(serviceService.getByCaseType(type));

@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/adn-results",
                                 "/api/v1/auth/**",
+                                "/api/blogs/**",
                                 "/api/vnpay/**",
                                 "/payment-result",
                                 "/test/**"
