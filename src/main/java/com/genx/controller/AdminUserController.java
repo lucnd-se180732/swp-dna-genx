@@ -47,12 +47,8 @@ public class AdminUserController {
 
 
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @DeleteMapping("/staff/{id}")
-    public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
-        UserResponseDto user = userService.getUserById(id);
-        if (user.getRole() != ERole.LAB_STAFF && user.getRole() != ERole.RECORDER_STAFF ) {
-            return ResponseEntity.status(403).build();
-        }
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
@@ -68,5 +64,18 @@ public class AdminUserController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(userService.getUsersByFilter(role, enabled, accountNonLocked, pageable));
+    }
+
+    //new
+    @GetMapping("/customers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponseDto>> getAllCustomers(
+            @RequestParam(required = false) Boolean accountNonLocked,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(userService.getUsersByFilter(ERole.CUSTOMER, enabled, accountNonLocked, pageable));
     }
 }

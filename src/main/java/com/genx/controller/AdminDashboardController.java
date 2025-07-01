@@ -17,7 +17,6 @@ import java.util.Map;
 public class AdminDashboardController {
 
     private final IAdminDashboardService dashboardService;
-    private final IBookingRepository bookingRepository;
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
@@ -31,10 +30,7 @@ public class AdminDashboardController {
             @RequestParam int month,
             @RequestParam int year
     ) {
-        Long revenue = bookingRepository
-                .sumMonthlyRevenue(EPaymentStatus.PAID, month, year)
-                .orElse(0L);
-
+        Long revenue = dashboardService.getMonthlyRevenue(month, year);
         return ResponseEntity.ok(Map.of("monthlyRevenue", revenue));
     }
 }

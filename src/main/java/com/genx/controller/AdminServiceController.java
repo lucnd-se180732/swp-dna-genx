@@ -51,4 +51,11 @@ public class AdminServiceController {
         serviceService.toggleEnabled(id, enabled);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        serviceService.deleteService(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -67,4 +67,10 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
                 monthlyRevenue
         );
     }
+
+    @Override
+    public Long getMonthlyRevenue(int month, int year) {
+        return bookingRepository.sumMonthlyRevenue(EPaymentStatus.PAID, month, year)
+                .orElse(0L);
+    }
 }

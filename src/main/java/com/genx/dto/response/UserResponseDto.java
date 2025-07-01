@@ -20,8 +20,6 @@ public class UserResponseDto {
     private String email;
     private String username;
     private ERole role;
-    private boolean enabled;
-    private boolean accountNonLocked;
     private String avatar;
     private String fingerprintImageUrl;
     private LocalDateTime startDate;

@@ -15,4 +15,5 @@ public interface IServiceService {
     List<ServiceResponseDto> getByCaseType(ECaseType caseType);
     ServiceResponseDto updateService(Long id, ServiceRequestDto dto);
     void toggleEnabled(Long id, boolean enabled);
+    void deleteService(Long id);
 }

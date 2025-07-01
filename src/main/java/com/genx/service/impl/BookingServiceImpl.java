@@ -7,12 +7,12 @@ package com.genx.service.impl;
     import com.genx.entity.SampleCollection;
     import com.genx.enums.EBookingStatus;
     import com.genx.enums.EParticipantSampleStatus;
+    import com.genx.enums.EPaymentStatus;
     import com.genx.enums.ESampleCollectionStatus;
     import com.genx.mapper.BookingMapper;
 
 
     import com.genx.repository.IBookingRepository;
-    import com.genx.repository.IParticipantRepository;
     import com.genx.repository.ISampleCollectionRepository;
     import com.genx.service.interfaces.IBookingService;
     import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ package com.genx.service.impl;
     import org.springframework.transaction.annotation.Transactional;
 
     import java.time.LocalDateTime;
+    import java.util.Optional;
 
 @Service
     public class BookingServiceImpl implements IBookingService {
@@ -93,4 +94,19 @@ package com.genx.service.impl;
                     .map(bookingMapper::toResponse);
         }
 
+    @Override
+    public Optional<Long> getTodayRevenue(EPaymentStatus status) {
+        return bookingRepository.sumTodayRevenue(status);
     }
+
+    @Override
+    public Optional<Long> getMonthlyRevenue(EPaymentStatus status, int month, int year) {
+        return bookingRepository.sumMonthlyRevenue(status, month, year);
+    }
+
+    @Override
+    public long countByPaymentStatus(EPaymentStatus status) {
+        return bookingRepository.countByPaymentStatus(status);
+    }
+
+}

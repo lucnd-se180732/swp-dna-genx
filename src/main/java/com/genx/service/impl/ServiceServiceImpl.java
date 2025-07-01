@@ -64,4 +64,11 @@ public class ServiceServiceImpl implements IServiceService {
         service.setEnabled(enabled);
         serviceRepository.save(service);
     }
+
+    @Override
+    public void deleteService(Long id) {
+        Service service = serviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+        serviceRepository.delete(service);
+    }
 }
