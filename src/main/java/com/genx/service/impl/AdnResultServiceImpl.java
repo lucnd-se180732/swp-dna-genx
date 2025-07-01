@@ -3,26 +3,28 @@ package com.genx.service.impl;
 
 import com.genx.dto.request.AdnResultRequest;
 import com.genx.dto.response.ParticipantResponse;
-import com.genx.entity.AdnResult;
-import com.genx.entity.Booking;
-import com.genx.entity.SampleCollection;
+import com.genx.entity.*;
 import com.genx.enums.ESampleCollectionStatus;
-import com.genx.mapper.AdnResultMapper;
 import com.genx.repository.IAdnResultRepository;
 import com.genx.repository.IBookingRepository;
-import com.genx.repository.ISampleCollectionRepository;
+import com.genx.repository.IStaffInfoRepository;
+import com.genx.security.AESUtil;
 import com.genx.service.interfaces.IAdnResultService;
+import com.genx.service.interfaces.INotificationService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,29 +32,87 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
     @Autowired
     private IAdnResultRepository adnResultRepository;
-    @Autowired
-    private ISampleCollectionRepository sampleCollectionRepository;
+
     @Autowired
     private IBookingRepository bookingRepository;
 
     @Autowired
-    private AdnResultMapper adnResultMapper;
+    private IStaffInfoRepository staffInfoRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AESUtil aesUtil;
+
+    @Autowired
+    private INotificationService notificationService;
 
     @Override
     public AdnResult saveAdnResult(AdnResultRequest request) {
         Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        StaffInfo staff = staffInfoRepository.findById(request.getStaffId())
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        String trackingCode = generateTrackingCode();
+        String trackingPasswordPlain = generateTrackingPassword();
+        String trackingPasswordHash = passwordEncoder.encode(trackingPasswordPlain);
+        String trackingPasswordEncrypted = aesUtil.encrypt(trackingPasswordPlain);
+
         AdnResult result = AdnResult.builder()
                 .booking(booking)
-                .createdAt(LocalDateTime.now())
-                .lociResults(request.getLociResults())
+                .enteredBy(staff)
+                .trackingCode(trackingCode)
+                .trackingPassword(trackingPasswordHash)
+                .trackingPasswordEncrypted(trackingPasswordEncrypted)
                 .conclusion(request.getConclusion())
+                .lociResults(request.getLociResults())
+                .createdAt(LocalDateTime.now())
                 .build();
-        return adnResultRepository.save(result);
+
+        AdnResult saved = adnResultRepository.save(result);
+
+        User customer = booking.getCustomer().getUser();
+        String title = "Mã tra cứu kết quả ADN đã sẵn sàng";
+        String message = "Mã tra cứu: " + saved.getTrackingCode() +
+                "\n➡️ Mật khẩu: " + trackingPasswordPlain +
+                "\n📦 Mã hồ sơ (booking): " + booking.getCode() +
+                "\nBạn có thể dùng thông tin này để xem kết quả xét nghiệm ADN của bạn.";
+
+        notificationService.sendNotification(customer, title, message, booking);
+
+
+        return saved;
     }
 
+    private String generateTrackingCode() {
+        return "DNA-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private String generateTrackingPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
 
     @Override
+    public AdnResult lookupResult(String trackingCode, String inputPassword) {
+        AdnResult result = adnResultRepository.findByTrackingCode(trackingCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả với mã tra cứu"));
+
+        if (!passwordEncoder.matches(inputPassword, result.getTrackingPassword())) {
+            throw new RuntimeException("Mật khẩu không đúng");
+        }
+
+        return result;
+    }
+
     public byte[] exportResultToPdf(Long bookingId) throws Exception {
         AdnResult result = adnResultRepository.findByBooking_Id(bookingId)
                 .orElseThrow(() -> new RuntimeException("Result not found"));
@@ -63,13 +123,12 @@ public class AdnResultServiceImpl implements IAdnResultService {
         PdfWriter.getInstance(document, out);
         document.open();
 
-        // Font tiếng Việt có dấu
         BaseFont baseFont = BaseFont.createFont("fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
         Font titleFont = new Font(baseFont, 16, Font.BOLD);
         Font headerFont = new Font(baseFont, 12, Font.BOLD);
         Font normalFont = new Font(baseFont, 11);
 
-        // CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+        // Header
         Paragraph govTitle = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", headerFont);
         govTitle.setAlignment(Element.ALIGN_CENTER);
         document.add(govTitle);
@@ -79,40 +138,72 @@ public class AdnResultServiceImpl implements IAdnResultService {
         slogan.setSpacingAfter(15f);
         document.add(slogan);
 
-        // Tiêu đề phiếu
         Paragraph mainTitle = new Paragraph("PHIẾU KẾT QUẢ XÉT NGHIỆM ADN", titleFont);
         mainTitle.setAlignment(Element.ALIGN_CENTER);
         mainTitle.setSpacingAfter(20f);
         document.add(mainTitle);
 
-        // THÔNG TIN NGƯỜI ĐẠI DIỆN
+        // Representative info
         document.add(new Paragraph("THÔNG TIN NGƯỜI ĐẠI DIỆN", headerFont));
         document.add(new Paragraph("Họ tên: " + booking.getCustomer().getUser().getFullName(), normalFont));
         document.add(new Paragraph("Số điện thoại: " + booking.getPhoneNumber(), normalFont));
         document.add(new Paragraph("Email: " + booking.getEmail(), normalFont));
-        document.add(new Paragraph("CMND/CCCD: " + (booking.getIdentityNumber() != null ? booking.getIdentityNumber() : "Không có"), normalFont));
         document.add(new Paragraph("Ngày hẹn: " + (booking.getAppointmentDate() != null ? booking.getAppointmentDate().toString() : "Không rõ"), normalFont));
         document.add(Chunk.NEWLINE);
 
-        // DANH SÁCH NGƯỜI THAM GIA
+        String caseType = booking.getService().getCaseType().name();
+        document.add(new Paragraph("Loại hồ sơ: " + (caseType != null ? caseType : "Không rõ"), normalFont));
+        document.add(Chunk.NEWLINE);
+
         document.add(new Paragraph("DANH SÁCH NGƯỜI THAM GIA", headerFont));
-        PdfPTable participantTable = new PdfPTable(3);
-        participantTable.setWidthPercentage(100);
-        participantTable.setSpacingBefore(10f);
-        participantTable.addCell(new PdfPCell(new Phrase("Họ tên", normalFont)));
-        participantTable.addCell(new PdfPCell(new Phrase("Kit Code", normalFont)));
-        participantTable.addCell(new PdfPCell(new Phrase("Mối quan hệ", normalFont)));
+        PdfPTable participantTable;
+        if ("ADMINISTRATIVE".equalsIgnoreCase(caseType)) {
+            participantTable = new PdfPTable(5);
+            participantTable.setWidthPercentage(100);
+            participantTable.setSpacingBefore(10f);
+            participantTable.addCell(new PdfPCell(new Phrase("Họ tên", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("Kit Code", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("Mối quan hệ", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("CMND/CCCD", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("Vân tay", normalFont)));
 
-        for (var p : booking.getParticipants()) {
-            participantTable.addCell(new PdfPCell(new Phrase(p.getFullName(), normalFont)));
-            participantTable.addCell(new PdfPCell(new Phrase(p.getKitCode(), normalFont)));
-            participantTable.addCell(new PdfPCell(new Phrase(p.getRelationship(), normalFont)));
+            for (var p : booking.getParticipants()) {
+                participantTable.addCell(new PdfPCell(new Phrase(p.getFullName(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getKitCode(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getRelationship(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getIdentityNumber() != null ? p.getIdentityNumber() : "Không có", normalFont)));
+
+                if (p.getFingerprintImageUrl() != null && !p.getFingerprintImageUrl().isEmpty()) {
+                    try {
+                        Image fingerprintImg = Image.getInstance(new URL(p.getFingerprintImageUrl()));
+                        fingerprintImg.scaleToFit(50, 50);
+                        PdfPCell imgCell = new PdfPCell(fingerprintImg, true);
+                        imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        participantTable.addCell(imgCell);
+                    } catch (Exception e) {
+                        participantTable.addCell(new PdfPCell(new Phrase("Lỗi ảnh", normalFont)));
+                    }
+                } else {
+                    participantTable.addCell(new PdfPCell(new Phrase("Không", normalFont)));
+                }
+            }
+        } else {
+            participantTable = new PdfPTable(3);
+            participantTable.setWidthPercentage(100);
+            participantTable.setSpacingBefore(10f);
+            participantTable.addCell(new PdfPCell(new Phrase("Họ tên", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("Kit Code", normalFont)));
+            participantTable.addCell(new PdfPCell(new Phrase("Mối quan hệ", normalFont)));
+
+            for (var p : booking.getParticipants()) {
+                participantTable.addCell(new PdfPCell(new Phrase(p.getFullName(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getKitCode(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getRelationship(), normalFont)));
+            }
         }
-
         document.add(participantTable);
         document.add(Chunk.NEWLINE);
 
-        // KẾT QUẢ LOCUS
         document.add(new Paragraph("KẾT QUẢ XÉT NGHIỆM (THEO LOCUS)", headerFont));
         PdfPTable lociTable = new PdfPTable(2);
         lociTable.setWidthPercentage(100);
@@ -128,7 +219,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(lociTable);
         document.add(Chunk.NEWLINE);
 
-        // KẾT LUẬN
         Paragraph conclusion = new Paragraph("KẾT LUẬN:", headerFont);
         conclusion.setSpacingBefore(15f);
         document.add(conclusion);
@@ -164,5 +254,26 @@ public class AdnResultServiceImpl implements IAdnResultService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void resendTrackingPassword(Long bookingId) {
+        AdnResult result = adnResultRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả"));
+
+
+        String decryptedPassword = aesUtil.decrypt(result.getTrackingPasswordEncrypted());
+
+        Booking booking = result.getBooking();
+        User customer = booking.getCustomer().getUser();
+
+        String message = "🔁 Gửi lại mã tra cứu ADN:\n" +
+                "Mã tra cứu: *" + result.getTrackingCode() + "*\n" +
+                "Mật khẩu: *" + decryptedPassword + "*\n" +
+                "Vui lòng sử dụng thông tin trên để tra cứu kết quả xét nghiệm.";
+
+        notificationService.sendNotification(customer, "Gửi lại mã tra cứu ADN", message, booking);
+    }
+
+
 
 }

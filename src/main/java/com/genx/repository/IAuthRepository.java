@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface IAuthRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
-    //Optional<User> findByUsername(String username);
     @Query("SELECT u FROM User u WHERE u.username = :username OR u.email = :username")
     Optional<User> findByUsernameOrEmail(@Param("username") String username);
     boolean existsByUsername(String username);

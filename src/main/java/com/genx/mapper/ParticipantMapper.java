@@ -27,8 +27,8 @@ public interface ParticipantMapper {
     Participant toEntity(ParticipantResponse participantResponse);
 
 
-
-    @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.user.fullName")
+    @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.fullName")
+    @Mapping(target = "fingerprintImageUrl", source = "fingerprintImageUrl")
     @Named("participantToResponse")
     @Mapping(target = "sampleStatus", source = "sampleStatus")
     ParticipantResponse toResponse(Participant entity);

@@ -8,8 +8,10 @@ import java.util.List;
 @Data
 public class AdnResultResponse {
     private Long id;
+    private Long bookingId;
     private String code;
-//    private Long bookingId;
+    private String trackingCode;
+    private String trackingPassword;
     private LocalDateTime createdAt;
     private Map<String, String> lociResults;
     private String conclusion;

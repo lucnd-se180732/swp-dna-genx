@@ -44,14 +44,9 @@ public class AuthServiceImpl implements IAuthService {
     @Autowired
     private IRefreshTokenRepository refreshTokenRepository;
 
-//    @Autowired
-//    private IUserService userService;
-
     @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private JwtConfig jwtConfig;
 
     @Autowired
     private ICustomerRepository customerRepository;
@@ -82,7 +77,7 @@ public class AuthServiceImpl implements IAuthService {
 
         userRepository.save(user);
         Customer customer = new Customer();
-        customer.setUser(user); // Hibernate sẽ gán luôn customer.id = savedUser.id
+        customer.setUser(user);
         customerRepository.save(customer);
 
         return "User registered successfully";
@@ -131,7 +126,13 @@ public class AuthServiceImpl implements IAuthService {
                 newUser.setAuthProvider(EAuthProvider.GOOGLE);
                 newUser.setEnabled(true);
                 newUser.setAccountNonLocked(true);
-                return userRepository.save(newUser);
+                User savedUser = userRepository.save(newUser);
+
+                Customer customer = new Customer();
+                customer.setUser(savedUser);
+                customerRepository.save(customer);
+
+                return savedUser;
             });
 
             if (!user.isEnabled() || !user.isAccountNonLocked())
@@ -152,6 +153,9 @@ public class AuthServiceImpl implements IAuthService {
         String refreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
         jwtService.saveOrUpdateRefreshToken(user, refreshToken);
 
+        Customer customer = customerRepository.findByUser(user).orElse(null);
+        String avatar = customer != null ? customer.getAvatar() : null;
+
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .fullName(user.getFullName())
@@ -160,6 +164,7 @@ public class AuthServiceImpl implements IAuthService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .avatar(avatar)
                 .build();
     }
     public void completeGoogleRegister(GoogleUserRequest request) {
@@ -170,12 +175,10 @@ public class AuthServiceImpl implements IAuthService {
 
         User user = optional.get();
 
-        // Kiểm tra xem đã hoàn tất chưa (tránh gọi lại)
         if (user.getPhoneNumber() != null) {
             throw new CustomException("Tài khoản đã được hoàn tất trước đó", 400);
         }
 
-        // Cập nhật các thông tin bổ sung
         user.setPhoneNumber(request.getPhoneNumber());
         user.setFullName(request.getFullName());
 
@@ -207,7 +210,6 @@ public class AuthServiceImpl implements IAuthService {
     public void logout(String refreshTokenFromCookie) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Trường hợp logout khi đang đăng nhập (có session trong SecurityContext)
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
             Long userId = userDetails.getUser().getId();
             int deleted = refreshTokenRepository.deleteByUserId(userId); // nên có return
@@ -220,7 +222,6 @@ public class AuthServiceImpl implements IAuthService {
             return;
         }
 
-        // Trường hợp không có session, nhưng có gửi refreshToken thủ công
         if (refreshTokenFromCookie != null && !refreshTokenFromCookie.isBlank()) {
             Claims claims;
             try {
@@ -241,8 +242,6 @@ public class AuthServiceImpl implements IAuthService {
 
             return;
         }
-
-        // Trường hợp không có cách nào xác định được người dùng
         throw new CustomException("Không thể xác định người dùng để logout", 400);
     }
 

@@ -8,6 +8,7 @@ import com.genx.enums.EPaymentStatus;
 import com.genx.mapper.PaymentMapper;
 import com.genx.repository.IPaymentRepository;
 import com.genx.repository.IBookingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class VNPayService {
     private final IBookingRepository IBookingRepository;
     private final IPaymentRepository IPaymentRepository;
     private final PaymentMapper paymentMapper;
+
+    @Autowired
+    private IPaymentRepository paymentRepository;
 
     @Autowired
     public VNPayService(VNPayConfig vnPayConfig,
@@ -50,23 +54,18 @@ public class VNPayService {
             }
             long amount = calculateAmount(booking);
 
-            // Tạo mã giao dịch duy nhất cho mỗi lần thanh toán
             String txnRef = booking.getId() + "_" + System.currentTimeMillis();
 
-            //Payment payment = new Payment();
             Payment payment = booking.getPayment();
             payment.setAmount((int)(amount/100));
             payment.setPayDate(LocalDateTime.now());
-            payment.setOrderId(txnRef); // Lưu txnRef vào orderId để đối chiếu khi callback
+            payment.setOrderId(txnRef);
             payment.setBooking(booking);
 
             payment = IPaymentRepository.save(payment);
-            // Gán lại vào booking (nếu quan hệ là hai chiều)
             booking.setPayment(payment);
-            IBookingRepository.save(booking); // cập nhật lại
+            IBookingRepository.save(booking);
 
-//            booking.setPayment(payment);
-//            Booking savedBooking = IBookingRepository.save(booking);
             Map<String, String> vnp_Params = buildVNPayParams(booking, amount, ip, txnRef);
             return buildPaymentUrl(vnp_Params);
         } catch (Exception e) {
@@ -154,16 +153,13 @@ public class VNPayService {
 
             if (vnp_SecureHash == null || vnp_TxnRef == null) return null;
 
-            // Tách bookingId
             String[] refParts = vnp_TxnRef.split("_");
             if (refParts.length != 2) return null;
             Long bookingId = Long.valueOf(refParts[0]);
 
-            // Lấy booking
             Booking booking = IBookingRepository.findById(bookingId).orElse(null);
             if (booking == null) return null;
 
-            // Nếu đã tồn tại payment với orderId này → không insert lại
             Optional<Payment> existing = IPaymentRepository.findByOrderId(vnp_TxnRef);
             if (existing.isPresent()) {
                 Payment payment = existing.get();
@@ -188,16 +184,13 @@ public class VNPayService {
                 return paymentMapper.toDTO(payment);
             }
 
-            // Xác thực chữ ký
             boolean isValid = validatePaymentResponse(params);
 
-            // Tạo và lưu payment mới
             Payment payment = createPayment(params);
             payment.setOrderId(vnp_TxnRef);
 
             Payment savedPayment = IPaymentRepository.save(payment);
 
-            // Cập nhật booking
             booking.setPayment(savedPayment);
             booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
             IBookingRepository.save(booking);
@@ -254,7 +247,7 @@ public class VNPayService {
                 hashData.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
             }
         }
-        // Xóa dấu & cuối cùng
+
         hashData.setLength(hashData.length() - 1);
 
         String rawData = hashData.toString();
@@ -265,9 +258,13 @@ public class VNPayService {
     }
 
     private void updateRegistrationStatus(Booking booking, Payment payment, boolean isValid) {
-       // payment.setBooking(booking);
         booking.setPayment(payment);
         booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
         IBookingRepository.save(booking);
+    }
+
+    public Payment getPaymentByOrderId(String orderId) {
+        return paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thanh toán với orderId: " + orderId));
     }
 }

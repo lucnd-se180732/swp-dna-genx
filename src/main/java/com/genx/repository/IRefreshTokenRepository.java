@@ -22,10 +22,10 @@ public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Lon
     @Modifying
     @Transactional
     @Query("DELETE FROM RefreshToken r WHERE r.user.id = :userId")
-    int deleteByUserId(Long userId);  // <-- Trả về số bản ghi xóa
+    int deleteByUserId(Long userId);
 
     @Modifying
     @Transactional
     @Query("DELETE FROM RefreshToken r WHERE r.user = :user")
-    int deleteByUser(User user);  // <-- Trả về số bản ghi xóa
+    int deleteByUser(User user);
 }

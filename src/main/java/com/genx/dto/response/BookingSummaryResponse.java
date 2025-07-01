@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BookingSummaryResponse {
     private Long id;
-    private String code; // Thêm mã đơn
+    private String code;
     private String customerName;
     private String phoneNumber;
     private LocalDateTime createdAt;
@@ -22,5 +22,5 @@ public class BookingSummaryResponse {
     private ECaseType caseType;
     private String serviceTypeName;
     private String avatar;
-    private ECollectionMethod collectionMethod; // Hình thức lấy mẫu
+    private ECollectionMethod collectionMethod;
 }

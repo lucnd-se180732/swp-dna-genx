@@ -4,21 +4,22 @@ package com.genx.controller;
 import com.genx.dto.request.BookingRequest;
 import com.genx.dto.response.BookingResponse;
 import com.genx.enums.EPaymentStatus;
-import com.genx.service.BookingService;
+import com.genx.service.interfaces.IBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/registrations")
-//@CrossOrigin(origins = "*")
 public class BookingController {
-    @Autowired
-    private BookingService bookingService;
 
-  // In BookingController.java
+    @Autowired
+    private IBookingService bookingService;
+
   @PostMapping("/register")
   public ResponseEntity<BookingResponse> createRegistration(@RequestBody BookingRequest bookingRequest) {
       BookingResponse savedRegistration = bookingService.createRegistration(bookingRequest);
@@ -27,7 +28,7 @@ public class BookingController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponse> getRegistration(@PathVariable Long id) {
-        BookingResponse registration = bookingService.getRegistrationById(id);
+        BookingResponse registration = bookingService.getBookingById(id);
         return ResponseEntity.ok(registration);
     }
 
@@ -37,14 +38,18 @@ public class BookingController {
         return ResponseEntity.ok(cancelledRegistration);
     }
     @GetMapping
-    public ResponseEntity<List<BookingResponse>> getAllRegistrations(
-            @RequestParam(required = false) EPaymentStatus status) {
-        List<BookingResponse> registrations;
+    public ResponseEntity<Page<BookingResponse>> getAllRegistrations(
+            @RequestParam(required = false) EPaymentStatus status,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<BookingResponse> registrations;
         if (status != null) {
-            registrations = bookingService.getRegistrationsByStatus(status);
+            registrations = bookingService.getRegistrationsByStatus(status, pageable);
         } else {
-            registrations = bookingService.getAllRegistrations();
+            registrations = bookingService.getAllRegistrations(pageable);
         }
         return ResponseEntity.ok(registrations);
     }
+
+
 }

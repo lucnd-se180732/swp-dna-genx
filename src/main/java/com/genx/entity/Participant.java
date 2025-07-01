@@ -48,7 +48,7 @@ public class Participant {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kit_entered_by")
-    private StaffInfo kitEnteredBy;
+    private User kitEnteredBy;
 
     private LocalDateTime kitEnteredAt;
 

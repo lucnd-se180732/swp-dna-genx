@@ -1,5 +1,6 @@
 package com.genx.dto.response;
 
+import com.genx.enums.ESampleType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,4 +22,6 @@ public class ParticipantResponse {
     private String sampleStatus;
     private String kitEnteredByName;
     private LocalDateTime kitEnteredAt;
+    private ESampleType sampleType;
+    private String fingerprintImageUrl;
 }

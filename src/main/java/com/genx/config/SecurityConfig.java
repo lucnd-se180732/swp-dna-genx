@@ -21,6 +21,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasAnyRole;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -48,21 +50,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //  Public endpoints
                         .requestMatchers(
-                                "/api/adn-results",
+                                "/api/adn-results/lookup",
                                 "/api/v1/auth/**",
                                 "/api/blogs/**",
                                 "/api/vnpay/**",
                                 "/payment-result",
-                                "/test/**"
+                                "/ws/**",
+                                "/api/adn-results/export/{bookingId}"
                         ).permitAll()
 
                         //  Endpoint yêu cầu login
                         .requestMatchers("/api/v1/auth/logout").authenticated()
-
+                        .requestMatchers("/api/notifications/**")
+                        .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF", "LAB_STAFF", "ADMIN"))
                         //  Role-based access
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/lab/**").hasRole("LAB_STAFF")
+                        .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
 
                         //  Các request còn lại bắt buộc phải đăng nhập
