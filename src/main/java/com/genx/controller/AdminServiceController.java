@@ -20,39 +20,32 @@ public class AdminServiceController {
 
     private final IServiceService serviceService;
 
-
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ServiceResponseDto> createService(@RequestBody ServiceRequestDto dto) {
         return ResponseEntity.ok(serviceService.createService(dto));
     }
-
 
     @GetMapping
     public ResponseEntity<List<ServiceResponseDto>> getAll() {
         return ResponseEntity.ok(serviceService.getAllServices());
     }
 
-
     @GetMapping("/filter")
     public ResponseEntity<List<ServiceResponseDto>> getByType(@RequestParam ECaseType type) {
         return ResponseEntity.ok(serviceService.getByCaseType(type));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ServiceResponseDto> update(@PathVariable Long id, @RequestBody ServiceRequestDto dto) {
         return ResponseEntity.ok(serviceService.updateService(id, dto));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{id}/enabled")
     public ResponseEntity<Void> toggleEnabled(@PathVariable Long id, @RequestParam boolean enabled) {
         serviceService.toggleEnabled(id, enabled);
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         serviceService.deleteService(id);

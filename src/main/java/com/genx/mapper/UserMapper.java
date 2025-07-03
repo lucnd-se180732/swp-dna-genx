@@ -15,6 +15,8 @@ public interface UserMapper {
     @Mapping(source = "staffInfo.avatar", target = "avatar")
     @Mapping(source = "staffInfo.fingerprintImageUrl", target = "fingerprintImageUrl")
     @Mapping(source = "staffInfo.startDate", target = "startDate")
+    @Mapping(source = "enabled", target = "enabled")
+    @Mapping(source = "accountNonLocked", target = "accountNonLocked")
     UserResponseDto toDTO(User user);
     @Mapping(target = "role", expression = "java(com.genx.enums.ERole.CUSTOMER)")
     @Mapping(target = "enabled", constant = "true")

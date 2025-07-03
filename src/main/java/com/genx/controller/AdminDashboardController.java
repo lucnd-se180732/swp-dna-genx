@@ -18,13 +18,13 @@ public class AdminDashboardController {
 
     private final IAdminDashboardService dashboardService;
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+
     @GetMapping
     public ResponseEntity<AdminDashboardDto> getDashboard() {
         return ResponseEntity.ok(dashboardService.getDashboardData());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+
     @GetMapping("/revenue")
     public ResponseEntity<Map<String, Long>> getMonthlyRevenue(
             @RequestParam int month,

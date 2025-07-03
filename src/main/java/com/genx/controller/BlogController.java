@@ -1,10 +1,10 @@
 package com.genx.controller;
 
-
-
 import com.genx.dto.request.BlogRequestDto;
 import com.genx.dto.response.BlogResponseDto;
+import com.genx.entity.User;
 import com.genx.service.interfaces.IBlogService;
+import com.genx.service.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,10 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/blogs")
@@ -23,11 +24,16 @@ import java.util.List;
 public class BlogController {
 
     private final IBlogService blogService;
+    private final IUserService userService;
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<BlogResponseDto> create(@RequestBody BlogRequestDto dto, @RequestParam Long userId) {
-        return ResponseEntity.ok(blogService.createBlog(dto, userId));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BlogResponseDto> create(@RequestBody BlogRequestDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName(); // lấy username từ token
+        User user = userService.getUserByUsername(username); // dùng để lấy ra entity User
+
+        return ResponseEntity.ok(blogService.createBlog(dto, user.getId()));
     }
 
     @GetMapping("/all")
@@ -40,14 +46,14 @@ public class BlogController {
         return ResponseEntity.ok(blogService.getBlogById(id));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BlogResponseDto> update(@PathVariable Long id, @RequestBody BlogRequestDto dto) {
         return ResponseEntity.ok(blogService.updateBlog(id, dto));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         blogService.deleteBlog(id);
         return ResponseEntity.noContent().build();

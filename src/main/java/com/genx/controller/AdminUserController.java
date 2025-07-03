@@ -21,7 +21,6 @@ public class AdminUserController {
 
     private final IUserService userService;
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/staff")
     public ResponseEntity<UserResponseDto> createStaff(@RequestBody UserRequestDto request) {
         if (request.getRole() != ERole.LAB_STAFF && request.getRole() != ERole.RECORDER_STAFF ) {
@@ -30,14 +29,12 @@ public class AdminUserController {
         UserResponseDto response = userService.createStaff(request);
         return ResponseEntity.ok(response);
     }
-    
-    @PreAuthorize("hasAnyRole('ADMIN')")
+
     @PutMapping("/staff/{id}")
     public ResponseEntity<UserResponseDto> updateStaff(@PathVariable Long id, @RequestBody UserRequestDto request) {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/status/{id}")
     public ResponseEntity<UserResponseDto> updateStatus(@PathVariable Long id,
                                                         @RequestParam boolean enabled,
@@ -45,15 +42,12 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.updateUserStatus(id, enabled, accountNonLocked));
     }
 
-
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/users/filter")
     public ResponseEntity<Page<UserResponseDto>> getUsersByFilter(
             @RequestParam(required = false) ERole role,
@@ -66,9 +60,7 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getUsersByFilter(role, enabled, accountNonLocked, pageable));
     }
 
-    //new
     @GetMapping("/customers")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponseDto>> getAllCustomers(
             @RequestParam(required = false) Boolean accountNonLocked,
             @RequestParam(required = false) Boolean enabled,

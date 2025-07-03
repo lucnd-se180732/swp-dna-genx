@@ -22,5 +22,6 @@ public class UserRequestDto {
     private String avatar;
     private String fingerprintImageUrl;
     private LocalDateTime startDate;
-    private EAuthProvider authProvider;
+
+
 }

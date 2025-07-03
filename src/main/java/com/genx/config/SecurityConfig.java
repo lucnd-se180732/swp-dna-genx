@@ -69,6 +69,25 @@ public class SecurityConfig {
                         .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
 
+                        // ✅ [THÊM MỚI] Blog APIs phân quyền rõ ràng
+                        .requestMatchers(
+                                "/api/blogs",
+                                "/api/blogs/all",
+                                "/api/blogs/{id:[\\d]+}"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                "/api/blogs",              // POST
+                                "/api/blogs/{id:[\\d]+}"   // PUT, DELETE
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers("/api/blogs/rate").hasRole("CUSTOMER")
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/services/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         //  Các request còn lại bắt buộc phải đăng nhập
                         .anyRequest().authenticated()
                 )
