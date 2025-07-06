@@ -166,6 +166,13 @@ public class BookingServiceImpl implements IBookingService {
             com.genx.entity.Service service = serviceRepository.findById(bookingRequest.getServiceId())
                     .orElseThrow(() -> new EntityNotFoundException("Service not found with id: " + bookingRequest.getServiceId()));
 
+
+
+            if (!service.isEnabled()) {
+                throw new IllegalStateException("Dịch vụ này hiện đang bị khóa. Không thể đăng ký.");
+            }
+
+
             Booking booking = bookingMapper.toEntity(bookingRequest);
             booking.setService(service);
             booking.setPaymentStatus(EPaymentStatus.UNPAID);

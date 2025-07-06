@@ -45,7 +45,7 @@ public class Participant {
 
     @Column(name = "kit_code", length = 100)
     private String kitCode;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kit_entered_by")
     private User kitEnteredBy;
