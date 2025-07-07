@@ -52,11 +52,22 @@ public class VNPayService {
             if (booking.getId() == null) {
                 booking = IBookingRepository.save(booking);
             }
-            long amount = calculateAmount(booking);
-
-            String txnRef = booking.getId() + "_" + System.currentTimeMillis();
 
             Payment payment = booking.getPayment();
+            EPaymentStatus status = booking.getPaymentStatus();
+
+            if (payment != null && (status == EPaymentStatus.PAID || "00".equals(payment.getResponseCode()))) {
+                throw new IllegalStateException("Đơn hàng đã được thanh toán thành công");
+            }
+
+            String txnRef = booking.getId() + "_" + System.currentTimeMillis();
+            long amount = calculateAmount(booking);
+
+            if (payment == null) {
+                payment = new Payment();
+                payment.setBooking(booking);
+            }
+
             payment.setAmount((int)(amount/100));
             payment.setPayDate(LocalDateTime.now());
             payment.setOrderId(txnRef);
@@ -89,7 +100,12 @@ public class VNPayService {
             throw new IllegalArgumentException("Service price must be greater than 0");
         }
 
-        return Math.round(basePrice * participants * 100);
+        double total = basePrice;
+        if (participants > 1) {
+            total += basePrice * 0.9 * (participants - 1);
+        }
+
+        return Math.round(total * 100);
     }
 
     private Map<String, String> buildVNPayParams(Booking booking, long amount, String ip, String txnRef) {
@@ -124,7 +140,7 @@ public class VNPayService {
         while (itr.hasNext()) {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
@@ -223,9 +239,6 @@ public class VNPayService {
         System.out.println("VNPay callback received:");
         params.forEach((k, v) -> System.out.println(k + " = " + v));
 
-        String vnp_SecureHash = params.get("vnp_SecureHash");
-        String calculatedHash = calculateSecureHash(params);
-
         String vnp_ResponseCode = params.get("vnp_ResponseCode");
         String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
 
@@ -236,35 +249,4 @@ public class VNPayService {
 
     }
 
-    private String calculateSecureHash(Map<String, String> params) {
-        Map<String, String> sortedParams = new TreeMap<>(params);
-        sortedParams.remove("vnp_SecureHash");
-        sortedParams.remove("vnp_SecureHashType");
-
-        StringBuilder hashData = new StringBuilder();
-        for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
-            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                hashData.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
-            }
-        }
-
-        hashData.setLength(hashData.length() - 1);
-
-        String rawData = hashData.toString();
-        System.out.println("Hash Raw Data: " + rawData);
-
-        return new HmacUtils(HmacAlgorithms.HMAC_SHA_512, vnPayConfig.getHashSecret())
-                .hmacHex(hashData.toString());
-    }
-
-    private void updateRegistrationStatus(Booking booking, Payment payment, boolean isValid) {
-        booking.setPayment(payment);
-        booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
-        IBookingRepository.save(booking);
-    }
-
-    public Payment getPaymentByOrderId(String orderId) {
-        return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thanh toán với orderId: " + orderId));
-    }
 }

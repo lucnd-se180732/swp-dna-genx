@@ -19,9 +19,10 @@ public class ParticipantResponse {
     private String issuePlace;
     private String relationship;
     private String kitCode;
+    private String kitStatus;
+    private String kitAssignedByName;
+    private LocalDateTime kitAssignedAt;
     private String sampleStatus;
-    private String kitEnteredByName;
-    private LocalDateTime kitEnteredAt;
     private ESampleType sampleType;
     private String fingerprintImageUrl;
 }

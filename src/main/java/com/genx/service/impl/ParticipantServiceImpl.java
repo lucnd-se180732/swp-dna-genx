@@ -1,17 +1,16 @@
 package com.genx.service.impl;
 
 import com.genx.dto.request.KitCodeRequest;
-import com.genx.dto.response.NotificationResponse;
 import com.genx.dto.response.ParticipantResponse;
-import com.genx.entity.Booking;
-import com.genx.entity.Participant;
-import com.genx.entity.User;
+import com.genx.entity.*;
 import com.genx.enums.EBookingStatus;
 import com.genx.enums.ECollectionMethod;
+import com.genx.enums.EKitStatus;
 import com.genx.enums.EParticipantSampleStatus;
 import com.genx.mapper.ParticipantMapper;
 import com.genx.repository.IParticipantRepository;
-import com.genx.repository.IStaffInfoRepository;
+import com.genx.repository.IKitRepository;
+import com.genx.repository.IKitStockRepository;
 import com.genx.security.SecurityUtil;
 import com.genx.service.interfaces.INotificationService;
 import com.genx.service.interfaces.IParticipantService;
@@ -22,7 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 public class ParticipantServiceImpl implements IParticipantService {
@@ -37,6 +39,12 @@ public class ParticipantServiceImpl implements IParticipantService {
     private INotificationService notificationService;
 
     @Autowired
+    private IKitRepository kitRepository;
+
+    @Autowired
+    private IKitStockRepository kitStockRepository;
+
+    @Autowired
     private IUploadImageFile uploadImageFile;
 
 
@@ -49,8 +57,24 @@ public class ParticipantServiceImpl implements IParticipantService {
             throw new IllegalStateException("Không thể gửi kit ở trạng thái hiện tại");
         }
 
+        Kit kit = participant.getKit();
+        if (kit == null) {
+            throw new IllegalStateException("Chưa chuẩn bị bộ kit. Hãy tạo trước khi gửi.");
+        }
+
+        if (kit.getStatus() != EKitStatus.CREATED) {
+            throw new IllegalStateException("Bộ kit không ở trạng thái có thể gửi.");
+        }
+
+        User currentUser = SecurityUtil.getCurrentUser()
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
+
+        kit.setStatus(EKitStatus.ASSIGNED);
+        kit.setAssignedAt(LocalDateTime.now());
+        kit.setAssignedBy(currentUser);
+        kitRepository.save(kit);
+
         participant.setSampleStatus(EParticipantSampleStatus.KIT_SENT);
-        participant.setKitEnteredAt(LocalDateTime.now());
         Participant saved = participantRepository.save(participant);
 
         checkAndNotifyIfAllKitSent(saved.getBooking());
@@ -58,23 +82,30 @@ public class ParticipantServiceImpl implements IParticipantService {
         return participantMapper.toResponse(saved);
     }
 
-    private void checkAndNotifyIfAllKitSent(Booking booking) {
-        boolean allKitSent = participantRepository.findByBooking_Id(booking.getId())
-                .stream()
-                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.KIT_SENT);
+    @Override
+    public ParticipantResponse assignKitToParticipant(Long participantId) {
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy participant"));
+        Kit kit = participant.getKit();
 
-        if (allKitSent) {
-            User customer = booking.getCustomer().getUser();
-
-            notificationService.sendNotification(
-                    customer,
-                    "Tất cả bộ kit đã được gửi đi",
-                    "Tất cả các bộ kit trong đơn đăng ký " +  booking.getCode() + " đã được gửi đến địa chỉ của bạn. \n" +
-                            "Vui lòng truy cập trang \"Hướng dẫn thu mẫu\" để chuẩn bị đúng cách khi nhận được bộ kit.\n",
-                    booking
-            );
+        if (kit.getStatus() != EKitStatus.CREATED) {
+            throw new IllegalStateException("Kit chưa đuược tạo");
         }
+        User currentUser = SecurityUtil.getCurrentUser()
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
+
+        kit.setStatus(EKitStatus.ASSIGNED);
+        kit.setAssignedAt(LocalDateTime.now());
+        kit.setAssignedBy(currentUser);
+        kitRepository.save(kit);
+        participant.setSampleStatus(EParticipantSampleStatus.WAITING_FOR_COLLECTION);
+        Participant saved = participantRepository.save(participant);
+
+        checkAndNotifyIfAllKitSent(saved.getBooking());
+
+        return participantMapper.toResponse(saved);
     }
+
 
     @Override
     public String uploadFingerprintImage(Long participantId, MultipartFile file) throws IOException {
@@ -107,22 +138,6 @@ public class ParticipantServiceImpl implements IParticipantService {
         return handleEnterKitCode(participantId, request, currentUser, true);
     }
 
-    private void notifyStaffIfAllKitsEnteredByCustomer(Booking booking) {
-        boolean allKitsEntered = participantRepository.findByBooking_Id(booking.getId())
-                .stream()
-                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.WAITING_FOR_COLLECTION);
-
-        if (allKitsEntered && booking.getCollectionMethod() == ECollectionMethod.HOME) {
-            User staff = booking.getRecordStaff().getUser();
-            notificationService.sendNotification(
-                    staff,
-                    "Khách đã thu mẫu xong",
-                    "Đơn #" + booking.getCode() + " đã được khách hoàn tất thu mẫu. Vui lòng kiểm tra và xử lý mẫu gửi đến.",
-                    booking
-            );
-        }
-    }
-
 
     @Override
     public ParticipantResponse confirmCollectedSample(Long participantId) {
@@ -137,6 +152,72 @@ public class ParticipantServiceImpl implements IParticipantService {
         return participantMapper.toResponse(participantRepository.save(participant));
     }
 
+    @Override
+    public ParticipantResponse prepareKitForParticipant(Long participantId) {
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy participant"));
+
+        if (participant.getKit() != null) {
+            throw new IllegalStateException("Participant này đã được gán kit.");
+        }
+
+        KitStock stock = kitStockRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException("KitStock không tồn tại"));
+
+        if (stock.getRemainingQuantity() <= 0) {
+            throw new IllegalStateException("Hết bộ kit. Không thể tạo thêm.");
+        }
+
+        stock.setRemainingQuantity(stock.getRemainingQuantity() - 1);
+        stock.setLastUpdated(LocalDateTime.now());
+        kitStockRepository.save(stock);
+
+        User currentUser = SecurityUtil.getCurrentUser()
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng đăng nhập"));
+
+        Kit kit = new Kit();
+        kit.setCode(generateUniqueKitCode());
+        kit.setStatus(EKitStatus.CREATED);
+        kit.setAssignedAt(LocalDateTime.now());
+        kit.setAssignedBy(currentUser);
+        kit.setParticipant(participant);
+
+        participant.setKit(kit);
+
+        kitRepository.save(kit);
+        Participant saved = participantRepository.save(participant);
+
+        return participantMapper.toResponse(saved);
+    }
+
+
+    @Override
+    public ParticipantResponse cancelPreparedKit(Long participantId) {
+        Participant participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy participant"));
+
+        Kit kit = participant.getKit();
+        if (kit == null || kit.getStatus() != EKitStatus.CREATED) {
+            throw new IllegalStateException("Không thể huỷ vì kit chưa được tạo hoặc đã được gửi.");
+        }
+
+        participant.setKit(null);
+        participantRepository.save(participant);
+        kitRepository.delete(kit);
+
+        KitStock stock = kitStockRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException("KitStock không tồn tại"));
+
+        stock.setRemainingQuantity(stock.getRemainingQuantity() + 1);
+        stock.setLastUpdated(LocalDateTime.now());
+        kitStockRepository.save(stock);
+
+        return participantMapper.toResponse(participant);
+    }
+
+
+
+
     private ParticipantResponse handleEnterKitCode(Long participantId, KitCodeRequest request, User currentUser, boolean isCustomer) {
         Participant participant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người tham gia với ID: " + participantId));
@@ -145,8 +226,8 @@ public class ParticipantServiceImpl implements IParticipantService {
             throw new IllegalStateException("Không thể nhập mã kit vì booking chưa được xác nhận.");
         }
 
-        if (participant.getKitCode() != null) {
-            throw new IllegalStateException("Mã kit đã được nhập trước đó.");
+        if (participant.getKit() == null) {
+            throw new IllegalStateException("Không tìm thấy mã kit được gán cho người tham gia.");
         }
 
         if (request.getSampleType() == null) {
@@ -162,15 +243,12 @@ public class ParticipantServiceImpl implements IParticipantService {
             ECollectionMethod method = participant.getBooking().getCollectionMethod();
             if (method == ECollectionMethod.HOME) {
                 if (participant.getSampleStatus() != EParticipantSampleStatus.KIT_SENT) {
-                    throw new IllegalStateException("Bạn chỉ có thể nhập mã kit khi bộ kit đã được gửi.");
+                    throw new IllegalStateException("Bạn chỉ có thể nhập thông tin mẫu khi kit đã được gửi.");
                 }
             }
         }
 
 
-        participant.setKitEnteredBy(currentUser);
-        participant.setKitCode(request.getKitCode());
-        participant.setKitEnteredAt(LocalDateTime.now());
         participant.setSampleType(request.getSampleType());
 
         if (isCustomer) {
@@ -203,6 +281,62 @@ public class ParticipantServiceImpl implements IParticipantService {
         }
 
         return participantMapper.toResponse(saved);
+    }
+
+
+    private void notifyStaffIfAllKitsEnteredByCustomer(Booking booking) {
+        boolean allKitsEntered = participantRepository.findByBooking_Id(booking.getId())
+                .stream()
+                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.WAITING_FOR_COLLECTION);
+
+        if (allKitsEntered && booking.getCollectionMethod() == ECollectionMethod.HOME) {
+            User staff = booking.getRecordStaff().getUser();
+            notificationService.sendNotification(
+                    staff,
+                    "Khách đã thu mẫu xong",
+                    "Đơn #" + booking.getCode() + " đã được khách hoàn tất thu mẫu. Vui lòng kiểm tra và xử lý mẫu gửi đến.",
+                    booking
+            );
+        }
+    }
+
+
+
+    private String generateUniqueKitCode() {
+        String code;
+        do {
+            code = "KIT-" + LocalDate.now().getYear() + "-" + randomAlphaNumeric(8);
+        } while (kitRepository.existsByCode(code));
+        return code;
+    }
+
+    private String randomAlphaNumeric(int length) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new SecureRandom();
+        for (int i = 0; i < length; i++) {
+            sb.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        return sb.toString();
+    }
+
+
+    private void checkAndNotifyIfAllKitSent(Booking booking) {
+        boolean allKitSent = participantRepository.findByBooking_Id(booking.getId())
+                .stream()
+                .allMatch(p -> p.getSampleStatus() == EParticipantSampleStatus.KIT_SENT);
+
+        if (allKitSent) {
+            User customer = booking.getCustomer().getUser();
+
+            notificationService.sendNotification(
+                    customer,
+                    "Tất cả bộ kit đã được gửi đi",
+                    "Tất cả các bộ kit trong đơn đăng ký " +  booking.getCode() + " đã được gửi đến địa chỉ của bạn. \n" +
+                            "Vui lòng truy cập trang \"Hướng dẫn thu mẫu\" để chuẩn bị đúng cách khi nhận được bộ kit.\n",
+                    booking
+            );
+        }
     }
 
 }

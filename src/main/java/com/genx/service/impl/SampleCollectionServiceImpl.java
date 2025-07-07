@@ -65,7 +65,7 @@ public class SampleCollectionServiceImpl implements ISampleCollectionService {
         notifyLabStaffs(sampleCollection);
     }
 
-    //ham thông báo cho nhân viên lab
+
     private void notifyLabStaffs(SampleCollection sampleCollection) {
         List<User> labStaffs = userRepository.findAllByRole(ERole.LAB_STAFF);
         String message = "Đơn #" + sampleCollection.getBooking().getCode() + " đã được gửi mẫu đến phòng lab.";

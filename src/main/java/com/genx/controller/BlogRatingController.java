@@ -22,10 +22,10 @@ public class BlogRatingController {
     @PostMapping("/rate")
     public ResponseEntity<Void> rateBlog(@RequestBody BlogRatingRequestDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // lấy username từ token
+        String username = authentication.getName();
 
-        User user = userService.getUserByUsername(username); // custom method trong UserService
-        blogRatingService.rateBlog(user.getId(), dto); // giữ nguyên logic
+        User user = userService.getUserByUsername(username);
+        blogRatingService.rateBlog(user.getId(), dto);
         return ResponseEntity.ok().build();
     }
 

@@ -27,7 +27,7 @@ public class Participant {
     @Column(name = "year_of_birth")
     private String yearOfBirth;
 
-    @Column(name = "identity_number")
+    @Column(name = "identity_number", length = 50)
     private String identityNumber;
 
     @Column(name = "issue_date")
@@ -43,14 +43,9 @@ public class Participant {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @Column(name = "kit_code", length = 100)
-    private String kitCode;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kit_entered_by")
-    private User kitEnteredBy;
-
-    private LocalDateTime kitEnteredAt;
+    @OneToOne
+    @JoinColumn(name = "kit_id")
+    private Kit kit;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sample_status")

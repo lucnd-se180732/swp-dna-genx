@@ -43,7 +43,6 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = authService.login(request);
 
-        // Gửi refreshToken vào cookie
         Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(secureCookie);

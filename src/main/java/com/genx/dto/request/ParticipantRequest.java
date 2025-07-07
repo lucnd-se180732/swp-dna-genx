@@ -14,6 +14,4 @@ public class ParticipantRequest {
     private String issueDate;
     private String issuePlace;
     private String relationship;
-    // Getters and setters
-
 }

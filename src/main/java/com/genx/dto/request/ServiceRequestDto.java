@@ -9,8 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ServiceRequestDto {
+    private Long id;
     private String name;
     private Double price;
     private ECaseType caseType;
-    private Boolean enabled; // Optional
+    private Boolean enabled;
 }

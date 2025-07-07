@@ -3,6 +3,8 @@ package com.genx.controller;
 
 import com.genx.dto.request.BookingRequest;
 import com.genx.dto.response.BookingResponse;
+import com.genx.dto.response.ServiceResponseDto;
+import com.genx.enums.ECaseType;
 import com.genx.enums.EPaymentStatus;
 import com.genx.service.interfaces.IBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,12 +15,22 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/registrations")
 public class BookingController {
 
     @Autowired
     private IBookingService bookingService;
+
+    @Autowired
+    private com.genx.service.interfaces.IServiceService serviceService;
+
+    @GetMapping("/services")
+    public List<ServiceResponseDto> getServicesByCaseType(@RequestParam ECaseType caseType) {
+        return serviceService.getEnabledServicesByCaseType(caseType);
+    }
 
   @PostMapping("/register")
   public ResponseEntity<BookingResponse> createRegistration(@RequestBody BookingRequest bookingRequest) {

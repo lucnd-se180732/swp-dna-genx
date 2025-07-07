@@ -71,4 +71,12 @@ public class ServiceServiceImpl implements IServiceService {
                 .orElseThrow(() -> new RuntimeException("Service not found"));
         serviceRepository.delete(service);
     }
+
+    @Override
+    public List<ServiceResponseDto> getEnabledServicesByCaseType(ECaseType caseType) {
+        List<Service> services = serviceRepository.findByCaseTypeAndEnabledTrue(caseType);
+        return services.stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

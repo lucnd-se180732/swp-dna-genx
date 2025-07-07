@@ -7,8 +7,11 @@ import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @Entity
 @Table(name = "service")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Service {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,10 +29,4 @@ public class Service {
     @Enumerated(EnumType.STRING)
     @Column(name = "case_type", nullable = false)
     private ECaseType caseType;
-
-
-
-
-
-
 }

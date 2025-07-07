@@ -14,7 +14,4 @@ public class PaymentRequest {
     private String responseCode;
     private LocalDateTime payDate;
 
-
-
-    // Getters and setters
 }

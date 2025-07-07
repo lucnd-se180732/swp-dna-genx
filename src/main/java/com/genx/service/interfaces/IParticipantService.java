@@ -8,7 +8,13 @@ import java.io.IOException;
 
 public interface IParticipantService{
 
+    ParticipantResponse cancelPreparedKit(Long participantId);
+
+    ParticipantResponse prepareKitForParticipant(Long participantId);
+
     ParticipantResponse sendKitToCustomer(Long participantId);
+
+    ParticipantResponse assignKitToParticipant(Long participantId);
 
     ParticipantResponse confirmCollectedSample(Long participantId);
 

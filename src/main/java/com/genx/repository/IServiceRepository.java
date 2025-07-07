@@ -15,4 +15,6 @@ public interface IServiceRepository extends JpaRepository<Service, Long> {
     List<Service> findByEnabled(boolean enabled);
 
     long countByEnabled(boolean enabled);
+
+    List<Service> findByCaseTypeAndEnabledTrue(ECaseType caseType);
 }

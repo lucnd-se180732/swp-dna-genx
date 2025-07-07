@@ -30,8 +30,8 @@ public class BlogController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BlogResponseDto> create(@RequestBody BlogRequestDto dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName(); // lấy username từ token
-        User user = userService.getUserByUsername(username); // dùng để lấy ra entity User
+        String username = auth.getName();
+        User user = userService.getUserByUsername(username);
 
         return ResponseEntity.ok(blogService.createBlog(dto, user.getId()));
     }

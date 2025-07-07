@@ -22,6 +22,22 @@ public class StaffSampleCollectionController {
     @Autowired
     private ISampleCollectionService sampleCollectionService;
 
+    @PostMapping("/participants/{id}/prepare-kit")
+    public ParticipantResponse prepareKitForParticipant(@PathVariable Long id) {
+        return participantService.prepareKitForParticipant(id);
+    }
+
+    @DeleteMapping("/participants/{id}/cancel-kit")
+    public ParticipantResponse cancelPreparedKit(@PathVariable Long id) {
+        return participantService.cancelPreparedKit(id);
+    }
+
+    @PutMapping("/participants/{id}/assign-kit")
+    public ParticipantResponse assignKitToParticipant(@PathVariable Long id) {
+        return participantService.assignKitToParticipant(id);
+    }
+
+
     @PutMapping("/participants/{id}/send-kit")
     public ParticipantResponse sendKitToCustomer(@PathVariable Long id) {
         return participantService.sendKitToCustomer(id);

@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KitCodeRequest {
-    private String kitCode;
     private ESampleType sampleType;
     private MultipartFile fingerprintImage;
 }

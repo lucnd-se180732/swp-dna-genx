@@ -29,7 +29,7 @@ public interface SampleCollectionMapper {
             @Mapping(target = "note", source = "note"),
             @Mapping(target = "collectedAt", source = "collectedAt"),
             @Mapping(target = "confirmedAt", source = "confirmedAt"),
-            @Mapping(target = "participants", source = "booking.participants", qualifiedByName = "participantToResponse")
+            @Mapping(target = "participants", source = "booking.participants")
     })
     SampleCollectionHistoryResponse toHistoryResponse(SampleCollection entity);
 

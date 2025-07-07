@@ -23,6 +23,4 @@ public class AdminDashboardDto {
     private long todayRevenue;
     private long monthlyRevenue;
 
-    // private long totalBookingsToday;
-    // private BigDecimal totalRevenueToday;
 }

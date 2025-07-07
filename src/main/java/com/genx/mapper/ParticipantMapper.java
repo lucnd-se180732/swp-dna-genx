@@ -14,22 +14,15 @@ public interface ParticipantMapper {
     @Mapping(source = "issueDate", target = "issueDate")
     @Mapping(source = "issuePlace", target = "issuePlace")
     @Mapping(source = "relationship", target = "relationship")
-    @Named("participantToDTO")
-    ParticipantResponse toDTO(Participant participant);
-
-    @Mapping(source = "fullName", target = "fullName")
-    @Mapping(source = "gender", target = "gender")
-    @Mapping(source = "yearOfBirth", target = "yearOfBirth")
-    @Mapping(source = "identityNumber", target = "identityNumber")
-    @Mapping(source = "issueDate", target = "issueDate")
-    @Mapping(source = "issuePlace", target = "issuePlace")
-    @Mapping(source = "relationship", target = "relationship")
     Participant toEntity(ParticipantResponse participantResponse);
 
 
-    @Mapping(target = "kitEnteredByName", source = "kitEnteredBy.fullName")
-    @Mapping(target = "fingerprintImageUrl", source = "fingerprintImageUrl")
-    @Named("participantToResponse")
-    @Mapping(target = "sampleStatus", source = "sampleStatus")
-    ParticipantResponse toResponse(Participant entity);
+    @Mapping(source = "kit.code", target = "kitCode")
+    @Mapping(source = "kit.status", target = "kitStatus")
+    @Mapping(source = "kit.assignedBy.fullName", target = "kitAssignedByName")
+    @Mapping(source = "kit.assignedAt", target = "kitAssignedAt")
+    @Mapping(source = "sampleStatus", target = "sampleStatus")
+    @Mapping(source = "sampleType", target = "sampleType")
+    @Mapping(source = "fingerprintImageUrl", target = "fingerprintImageUrl")
+    ParticipantResponse toResponse(Participant participant);
 }

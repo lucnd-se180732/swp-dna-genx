@@ -17,8 +17,8 @@ public class CustomerSampleCollectionController {
 
     @PutMapping("/participants/{id}/kit-code")
     public ParticipantResponse enterKitCodeByCustomer(@PathVariable("id") Long participantId,
-                                                      @RequestBody KitCodeRequest request,
-                                                      Authentication authentication) {
+                                                      @RequestBody KitCodeRequest request
+                                                     ) {
         return participantService.enterKitCodeByCustomer(participantId, request);
     }
 }

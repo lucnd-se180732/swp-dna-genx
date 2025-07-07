@@ -75,7 +75,6 @@ public class UserServiceImpl implements IUserService {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        // Tạo user từ DTO
         User staff = userMapper.toEntity(dto);
         staff.setPassword(passwordEncoder.encode(dto.getPassword()));
         staff.setEnabled(true);
@@ -83,7 +82,6 @@ public class UserServiceImpl implements IUserService {
 
         User saved = userRepository.save(staff);
 
-        // Luôn tạo StaffInfo
         StaffInfo info = new StaffInfo();
         info.setUser(saved);
         info.setAvatar(dto.getAvatar());
@@ -143,7 +141,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Page<UserResponseDto> getUsersByFilter(ERole role, Boolean enabled, Boolean accountNonLocked, Pageable pageable) {
-        Page<User> page = userRepository.findAll(pageable); // Đảm bảo trả về Page<User>
+        Page<User> page = userRepository.findAll(pageable);
 
         List<UserResponseDto> filtered = page.getContent().stream()
                 .filter(u -> role == null || u.getRole() == role)
@@ -201,7 +199,6 @@ public class UserServiceImpl implements IUserService {
         }
         userRepository.save(user);
 
-        // Trường hợp role là STAFF thì cập nhật avatar, startedDate
         if (user.getRole().name().contains("RECORDER_STAFF")) {
             StaffInfo staff = staffInfoRepository.findByUserId(user.getId());
             if (staff != null) {
@@ -216,7 +213,6 @@ public class UserServiceImpl implements IUserService {
             }
         }
 
-        // CUSTOMER
         if (user.getRole().name().equals("CUSTOMER")) {
             Customer customer = customerRepository.findByUserId(user.getId());
             if (customer != null) {
@@ -243,7 +239,6 @@ public class UserServiceImpl implements IUserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         try {
-            // 1. Lấy avatar cũ (nếu có)
             String oldAvatarUrl = null;
 
             if (user.getRole().name().contains("RECORDER_STAFF")) {
@@ -267,7 +262,6 @@ public class UserServiceImpl implements IUserService {
                     log.warn("Không thể xóa ảnh cũ: {}", e.getMessage());
                 }
             }
-
 
             String uploadedUrl = uploadImageFile.uploadImageFile(file);
 
@@ -313,7 +307,7 @@ public class UserServiceImpl implements IUserService {
         if (folderIndex == -1) return null;
 
         String noExtension = url.substring(0, url.lastIndexOf('.'));
-        return noExtension.substring(folderIndex); // Trả về "avatars/abc123_xyz"
+        return noExtension.substring(folderIndex);
     }
 
 }

@@ -47,7 +47,6 @@ public class AdnResultController {
         request.setStaffId(userId);
 
         AdnResult result = adnResultService.saveAdnResult(request);
-        // Trả lại thông tin mã tra cứu
         AdnResultResponse response = new AdnResultResponse();
         response.setTrackingCode(result.getTrackingCode());
         response.setTrackingPassword(result.getTrackingPassword());

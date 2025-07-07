@@ -95,6 +95,9 @@ public class BookingServiceImpl implements IBookingService {
         if (booking.getStatus() != EBookingStatus.PENDING) {
             throw new IllegalStateException("Chỉ có thể xác nhận đơn đang ở trạng thái PENDING");
         }
+        if (booking.getPayment() == null || !booking.getPaymentStatus().equals(EPaymentStatus.PAID)) {
+            throw new IllegalStateException("Không thể xác nhận đơn chưa thanh toán");
+        }
 
         booking.setStatus(EBookingStatus.CONFIRMED);
         booking.setRecordStaff(staffInfo);
@@ -118,10 +121,7 @@ public class BookingServiceImpl implements IBookingService {
         return bookingMapper.toResponse(bookingRepository.save(booking));
     }
 
-    private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {
-        String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận. ", booking.getCode());
-        notificationService.sendNotification(customerUser, "Đơn đã được xác nhận", message, booking);
-    }
+
 
     @Override
     public Booking getFullRegistrationById(Long id) {
@@ -199,14 +199,6 @@ public class BookingServiceImpl implements IBookingService {
         }
     }
 
-    private void notifyRecorderStaffs(Booking booking) {
-        List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
-
-        String customerName = booking.getCustomer().getUser().getFullName();
-        String message = "Khách hàng " + customerName + " vừa tạo đơn #" + booking.getCode();
-
-        notificationService.sendBulkNotification(staffs, "Đơn đăng ký mới", message, booking);
-    }
 
     @Override
     @Transactional
@@ -290,7 +282,6 @@ public class BookingServiceImpl implements IBookingService {
                 .map(bookingMapper::toDTO);
     }
 
-    // --- Các hàm từ nhánh kia đã gộp ---
     @Override
     public Optional<Long> getTodayRevenue(EPaymentStatus status) {
         return bookingRepository.sumTodayRevenue(status);
@@ -304,5 +295,19 @@ public class BookingServiceImpl implements IBookingService {
     @Override
     public long countByPaymentStatus(EPaymentStatus status) {
         return bookingRepository.countByPaymentStatus(status);
+    }
+
+    private void notifyRecorderStaffs(Booking booking) {
+        List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
+
+        String customerName = booking.getCustomer().getUser().getFullName();
+        String message = "Khách hàng " + customerName + " vừa tạo đơn #" + booking.getCode();
+
+        notificationService.sendBulkNotification(staffs, "Đơn đăng ký mới", message, booking);
+    }
+
+    private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {
+        String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận. ", booking.getCode());
+        notificationService.sendNotification(customerUser, "Đơn đã được xác nhận", message, booking);
     }
 }

@@ -17,7 +17,7 @@ public interface BookingMapper {
     @Mapping(source = "phoneNumber", target = "phoneNumber")
     @Mapping(source = "email", target = "email")
     @Mapping(source = "appointmentDate", target = "appointmentDate")
-    @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
+    @Mapping(source = "participants", target = "participants")
     @Mapping(source = "numberOfParticipants", target = "numberOfParticipants")
     @Mapping(source = "booking.createdAt", target = "createdAt")
     @Mapping(target = "customerName", source = "customer.user.fullName")
@@ -42,7 +42,7 @@ public interface BookingMapper {
     @Mapping(target = "serviceTypeName", source = "service.name")
     @Mapping(target = "servicePrice", source = "service.price")
     @Mapping(target = "collectionMethod", source = "collectionMethod")
-    @Mapping(source = "participants", target = "participants", qualifiedByName = "participantToResponse")
+    @Mapping(source = "participants", target = "participants")
     @Mapping(
             target = "sampleCollectionStatus",
             expression = "java(booking.getSampleCollection() != null ? booking.getSampleCollection().getStatus() : null)"

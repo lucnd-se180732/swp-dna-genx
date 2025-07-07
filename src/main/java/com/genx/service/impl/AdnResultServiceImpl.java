@@ -169,7 +169,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
             for (var p : booking.getParticipants()) {
                 participantTable.addCell(new PdfPCell(new Phrase(p.getFullName(), normalFont)));
-                participantTable.addCell(new PdfPCell(new Phrase(p.getKitCode(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getKit().getCode(), normalFont)));
                 participantTable.addCell(new PdfPCell(new Phrase(p.getRelationship(), normalFont)));
                 participantTable.addCell(new PdfPCell(new Phrase(p.getIdentityNumber() != null ? p.getIdentityNumber() : "Không có", normalFont)));
 
@@ -197,7 +197,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
             for (var p : booking.getParticipants()) {
                 participantTable.addCell(new PdfPCell(new Phrase(p.getFullName(), normalFont)));
-                participantTable.addCell(new PdfPCell(new Phrase(p.getKitCode(), normalFont)));
+                participantTable.addCell(new PdfPCell(new Phrase(p.getKit().getCode(), normalFont)));
                 participantTable.addCell(new PdfPCell(new Phrase(p.getRelationship(), normalFont)));
             }
         }
@@ -248,7 +248,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
                 .map(p -> {
                     ParticipantResponse dto = new ParticipantResponse();
                     dto.setFullName(p.getFullName());
-                    dto.setKitCode(p.getKitCode());
+                    dto.setKitCode(p.getKit().getCode());
                     dto.setRelationship(p.getRelationship());
                     return dto;
                 })

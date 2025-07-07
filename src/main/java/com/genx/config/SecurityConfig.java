@@ -53,13 +53,12 @@ public class SecurityConfig {
                                 "/api/adn-results/lookup",
                                 "/api/v1/auth/**",
                                 "/api/blogs/**",
-                                "/api/vnpay/**",
                                 "/payment-result",
                                 "/ws/**",
+                                "/api/vnpay/vnpay-return",
                                 "/api/adn-results/export/{bookingId}"
                         ).permitAll()
 
-                        //  Endpoint yêu cầu login
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/notifications/**")
                         .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF", "LAB_STAFF", "ADMIN"))
@@ -67,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
-                        .requestMatchers("/api/registrations/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/registrations/**", "/api/v1/customer/sample-collection/**", "/api/vnpay/**").hasRole("CUSTOMER")
 
                         // ✅ [THÊM MỚI] Blog APIs phân quyền rõ ràng
                         .requestMatchers(
@@ -77,8 +76,8 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
-                                "/api/blogs",              // POST
-                                "/api/blogs/{id:[\\d]+}"   // PUT, DELETE
+                                "/api/blogs",
+                                "/api/blogs/{id:[\\d]+}"
                         ).hasRole("ADMIN")
 
                         .requestMatchers("/api/blogs/rate").hasRole("CUSTOMER")
@@ -88,7 +87,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/services/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        //  Các request còn lại bắt buộc phải đăng nhập
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

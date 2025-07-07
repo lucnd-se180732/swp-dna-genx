@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,11 +22,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService customUserDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        if (path.startsWith("/api/v1/auth/")) {
+        if (path.startsWith("/api/v1/auth/") || path.startsWith("/ws/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -34,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("JWT Filter triggered - path: " + path);
         System.out.println("Token received: " + token);
 
-        if (token != null && jwtService.validateToken(token)) {
+        if (token != null && jwtService.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
             String username = jwtService.getUsernameFromToken(token);
             System.out.println("JWT username: " + username);
             CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
