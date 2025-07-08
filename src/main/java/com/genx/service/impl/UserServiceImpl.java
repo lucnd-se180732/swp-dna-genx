@@ -10,6 +10,7 @@ import com.genx.dto.response.UserResponseDto;
 import com.genx.entity.Customer;
 import com.genx.entity.StaffInfo;
 import com.genx.entity.User;
+import com.genx.enums.EAuthProvider;
 import com.genx.enums.ERole;
 import com.genx.mapper.UserAccountMapper;
 import com.genx.mapper.UserMapper;
@@ -79,6 +80,9 @@ public class UserServiceImpl implements IUserService {
         staff.setPassword(passwordEncoder.encode(dto.getPassword()));
         staff.setEnabled(true);
         staff.setAccountNonLocked(true);
+        if (staff.getAuthProvider() == null) {
+            staff.setAuthProvider(EAuthProvider.SYSTEM);
+        }
 
         User saved = userRepository.save(staff);
 

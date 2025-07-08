@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class UserResponseDto {
-    private Long id;
     private String fullName;
     private String gender;
     private String phoneNumber;
@@ -25,7 +24,5 @@ public class UserResponseDto {
     private String avatar;
     private String fingerprintImageUrl;
     private LocalDateTime startDate;
-
-
 
 }
