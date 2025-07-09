@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**", "/api/v1/customer/sample-collection/**", "/api/vnpay/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/v1/rooms/**", "/api/v1/chat/**").hasAnyRole("CUSTOMER", "RECORDER_STAFF")
 
                         // ✅ [THÊM MỚI] Blog APIs phân quyền rõ ràng
                         .requestMatchers(
