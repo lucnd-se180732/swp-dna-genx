@@ -14,6 +14,7 @@ import com.genx.enums.ERole;
 import com.genx.mapper.UserAccountMapper;
 import com.genx.mapper.UserMapper;
 import com.genx.repository.ICustomerRepository;
+import com.genx.repository.IRoomRepository;
 import com.genx.repository.IStaffInfoRepository;
 import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IUploadImageFile;
@@ -32,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +65,9 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private IRoomRepository roomRepository;
 
 
     @Override
@@ -97,6 +102,14 @@ public class UserServiceImpl implements IUserService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
+
+    @Override
+    public User getStaffWithLeastRooms() {
+        List<User> staffs = userRepository.findByRole(ERole.RECORDER_STAFF);
+        return staffs.stream()
+                .min(Comparator.comparingInt(staff -> roomRepository.countByStaffId(staff.getId())))
+                .orElse(null);
     }
 
     @Override

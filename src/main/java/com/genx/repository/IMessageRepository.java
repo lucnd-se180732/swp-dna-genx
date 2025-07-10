@@ -1,6 +1,7 @@
 package com.genx.repository;
 
 import com.genx.entity.Message;
+import com.genx.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +17,7 @@ public interface IMessageRepository extends JpaRepository<Message, Long> {
 
     Page<Message> findByRoomRoomIdOrderByTimeStampDesc(String roomId, Pageable pageable);
 
-    List<Message> findBySender(String sender);
+    List<Message> findBySender(User sender);
 
     @Query("SELECT m FROM Message m WHERE m.room.roomId = :roomId ORDER BY m.timeStamp DESC")
     List<Message> findRecentMessages(@Param("roomId") String roomId, Pageable pageable);

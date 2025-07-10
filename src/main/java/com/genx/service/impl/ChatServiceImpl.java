@@ -4,10 +4,12 @@ import com.genx.dto.request.MessageRequest;
 import com.genx.dto.response.MessageResponse;
 import com.genx.entity.Message;
 import com.genx.entity.Room;
+import com.genx.entity.User;
 import com.genx.repository.IMessageRepository;
 import com.genx.repository.IRoomRepository;
-import com.genx.service.interfaces.IChatService;  // Updated import
-import com.genx.service.interfaces.IRoomService;  // Updated import
+import com.genx.service.interfaces.IChatService;
+import com.genx.service.interfaces.IRoomService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class ChatServiceImpl implements IChatService {
 
@@ -25,54 +28,32 @@ public class ChatServiceImpl implements IChatService {
     private final IRoomRepository roomRepository;
     private final IRoomService roomService;
 
-    public ChatServiceImpl(IMessageRepository messageRepository, IRoomRepository roomRepository, IRoomService roomService) {
-        this.messageRepository = messageRepository;
-        this.roomRepository = roomRepository;
-        this.roomService = roomService;
-    }
-
     @Override
-    public MessageResponse sendMessage(String roomId, MessageRequest request, String authenticatedUser) {
-        Room room = roomRepository.findByRoomId(roomId);
-        if (room == null) {
-            throw new RuntimeException("Room not found: " + roomId);
-        }
-
-        // Verify user can send message to this room
-        if (!roomService.canUserAccessRoom(authenticatedUser, room)) {
-            throw new RuntimeException("User not authorized to send message to this room");
+    public Message saveMessage(MessageRequest request, User sender) {
+        Room room = roomRepository.findByRoomId(request.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found: " + request.getRoomId()));
+        if (room == null || !canUserAccessRoom(room, sender)) {
+            throw new RuntimeException("Room not found or access denied");
         }
 
         Message message = new Message();
-        message.setContent(request.getContent());
-        message.setSender(authenticatedUser);
-        message.setTimeStamp(LocalDateTime.now());
+        message.setSender(sender);
         message.setRoom(room);
+        message.setContent(request.getContent());
+        message.setTimeStamp(LocalDateTime.now());
 
-        Message savedMessage = messageRepository.save(message);
-
-        // Update room's last message time
         room.setLastMessageAt(LocalDateTime.now());
         roomRepository.save(room);
 
-        return new MessageResponse(
-                savedMessage.getId(),
-                savedMessage.getContent(),
-                savedMessage.getSender(),
-                roomId,
-                savedMessage.getTimeStamp()
-        );
+        return messageRepository.save(message);
     }
 
     @Override
-    public List<MessageResponse> getMessagesByRoom(String roomId, String authenticatedUser, int page, int size) {
-        Room room = roomRepository.findByRoomId(roomId);
-        if (room == null) {
-            throw new RuntimeException("Room not found: " + roomId);
-        }
+    public List<MessageResponse> getMessagesByRoom(String roomId, String authenticatedUserEmail, int page, int size) {
+        Room room = roomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found: " + roomId));
 
-        // Verify user can access this room
-        if (!roomService.canUserAccessRoom(authenticatedUser, room)) {
+        if (!roomService.canUserAccessRoom(room)) {
             throw new RuntimeException("User not authorized to access this room");
         }
 
@@ -80,13 +61,28 @@ public class ChatServiceImpl implements IChatService {
         List<Message> messages = messageRepository.findByRoomRoomIdOrderByTimeStampDesc(roomId);
 
         return messages.stream()
-                .map(msg -> new MessageResponse(
-                        msg.getId(),
-                        msg.getContent(),
-                        msg.getSender(),
-                        roomId,
-                        msg.getTimeStamp()
-                ))
+                .map(msg -> MessageResponse.builder()
+                        .id(msg.getId())
+                        .content(msg.getContent())
+                        .senderId(msg.getSender().getId())
+                        .roomId(roomId)
+                        .timeStamp(msg.getTimeStamp())
+                        .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getUsernamesInRoom(String roomId) {
+        Room room = roomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found: " + roomId));
+
+        return List.of(
+                room.getCustomer().getUsername(),
+                room.getStaff().getUsername()
+        );
+    }
+
+    private boolean canUserAccessRoom(Room room, User user) {
+        return user.getId().equals(room.getCustomer().getId()) || user.getId().equals(room.getStaff().getId());
     }
 }

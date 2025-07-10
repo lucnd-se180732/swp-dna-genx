@@ -22,11 +22,13 @@ public class Room {
     @Column(unique = true, nullable = false)
     private String roomId;
 
-    @Column(nullable = false)
-    private String customerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User customer;
 
-    @Column(nullable = false)
-    private String staffId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "staff_id", nullable = false)
+    private User staff;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

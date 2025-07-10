@@ -31,4 +31,5 @@ public interface IUserService {
     UserResponseDto updateUserStatus(Long id, boolean enabled, boolean accountNonLocked);
     Page<UserResponseDto> getUsersByFilter(ERole role, Boolean enabled, Boolean accountNonLocked, Pageable pageable);
     User getUserByUsername(String username);
+    User getStaffWithLeastRooms();
 }

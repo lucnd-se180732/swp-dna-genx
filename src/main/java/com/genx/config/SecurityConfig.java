@@ -1,19 +1,19 @@
 package com.genx.config;
 
 import com.genx.security.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,19 +25,14 @@ import static org.springframework.security.authorization.AuthorityAuthorizationM
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${frontendUrl}")
     private String frontendUrl;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,46 +43,53 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        //  Public endpoints
                         .requestMatchers(
                                 "/api/adn-results/lookup",
                                 "/api/v1/auth/**",
                                 "/api/blogs/**",
                                 "/payment-result",
-                                "/ws/**",
                                 "/api/vnpay/vnpay-return",
                                 "/api/adn-results/export/{bookingId}"
                         ).permitAll()
 
+
+                        .requestMatchers("/ws/**").permitAll()
+
+                        // Nhưng bắt buộc xác thực để gửi/nhận message
+                        .requestMatchers("/topic/**", "/queue/**", "/user/**").authenticated()
+
+                        // Chat + Room APIs
+                        .requestMatchers("/api/v1/rooms/**", "/app/**")
+                        .hasAnyRole("CUSTOMER", "RECORDER_STAFF")
+
+                        // Logout, notification
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/notifications/**")
                         .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF", "LAB_STAFF", "ADMIN"))
-                        //  Role-based access
-                        .requestMatchers("/api/v1/staff/sample-collection/**", "/api/v1/staff/booking/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
-                        .requestMatchers("/api/registrations/**", "/api/v1/customer/sample-collection/**", "/api/vnpay/**").hasRole("CUSTOMER")
-                        .requestMatchers("/api/v1/rooms/**", "/api/v1/chat/**").hasAnyRole("CUSTOMER", "RECORDER_STAFF")
 
-                        // ✅ [THÊM MỚI] Blog APIs phân quyền rõ ràng
+                        // Role-based APIs
+                        .requestMatchers("/api/v1/staff/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
+                        .requestMatchers(
+                                "/api/registrations/**",
+                                "/api/v1/customer/**",
+                                "/api/vnpay/**"
+                        ).hasRole("CUSTOMER")
+
+                        // Blog APIs (phân quyền)
                         .requestMatchers(
                                 "/api/blogs",
                                 "/api/blogs/all",
                                 "/api/blogs/{id:[\\d]+}"
                         ).permitAll()
-
                         .requestMatchers(
                                 "/api/blogs",
                                 "/api/blogs/{id:[\\d]+}"
                         ).hasRole("ADMIN")
-
                         .requestMatchers("/api/blogs/rate").hasRole("CUSTOMER")
 
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/services/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
+                        // Các API còn lại
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -107,5 +109,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
