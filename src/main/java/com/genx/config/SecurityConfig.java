@@ -56,7 +56,11 @@ public class SecurityConfig {
                                 "/payment-result",
                                 "/ws/**",
                                 "/api/vnpay/vnpay-return",
-                                "/api/adn-results/export/{bookingId}"
+                                "/api/adn-results/export/{bookingId}",
+                                "/api/blogs",
+                                "/api/blogs/all",
+                                "/api/blogs/{id:[\\d]+}",
+                                "/api/admin/services/**"
                         ).permitAll()
 
                         .requestMatchers("/api/v1/auth/logout").authenticated()
@@ -68,13 +72,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")
                         .requestMatchers("/api/registrations/**", "/api/v1/customer/sample-collection/**", "/api/vnpay/**").hasRole("CUSTOMER")
 
-                        // ✅ [THÊM MỚI] Blog APIs phân quyền rõ ràng
-                        .requestMatchers(
-                                "/api/blogs",
-                                "/api/blogs/all",
-                                "/api/blogs/{id:[\\d]+}"
-                        ).permitAll()
-
                         .requestMatchers(
                                 "/api/blogs",
                                 "/api/blogs/{id:[\\d]+}"
@@ -84,7 +81,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/services/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
