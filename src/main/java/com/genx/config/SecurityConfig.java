@@ -60,7 +60,7 @@ public class SecurityConfig {
                                 "/api/blogs",
                                 "/api/blogs/all",
                                 "/api/blogs/{id:[\\d]+}",
-                                "/api/admin/services/**"
+                                "/api/services/**"
                         ).permitAll()
 
                         .requestMatchers("/api/v1/auth/logout").authenticated()

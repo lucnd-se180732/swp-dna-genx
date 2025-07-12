@@ -2,6 +2,7 @@ package com.genx.service.impl;
 
 import com.genx.dto.request.BlogRatingRequestDto;
 import com.genx.dto.response.BlogRatingResponseDto;
+import com.genx.dto.response.BlogRatingStatsResponseDto;
 import com.genx.entity.BlogRate.Blog;
 import com.genx.entity.BlogRate.BlogRating;
 import com.genx.entity.User;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +56,32 @@ public class BlogRatingServiceImpl implements IBlogRatingService {
                 .blogId(blogId)
                 .averageRating(average)
                 .totalVotes(ratings.size())
+                .build();
+    }
+
+    @Override
+    public BlogRatingStatsResponseDto getAdminBlogRatingStats(Long blogId) {
+        List<BlogRating> ratings = blogRatingRepository.findAllByBlog_Id(blogId);
+
+        Map<Integer, Long> ratingCounts = ratings.stream()
+                .collect(Collectors.groupingBy(
+                        r -> (int) r.getRating(),
+                        Collectors.counting()
+                ));
+
+        double average = ratings.stream()
+                .mapToDouble(BlogRating::getRating)
+                .average().orElse(0);
+
+        return BlogRatingStatsResponseDto.builder()
+                .id(blogId)
+                .averageRating(average)
+                .totalVotes(ratings.size())
+                .oneStarVotes(ratingCounts.getOrDefault(1, 0L))
+                .twoStarVotes(ratingCounts.getOrDefault(2, 0L))
+                .threeStarVotes(ratingCounts.getOrDefault(3, 0L))
+                .fourStarVotes(ratingCounts.getOrDefault(4, 0L))
+                .fiveStarVotes(ratingCounts.getOrDefault(5, 0L))
                 .build();
     }
 }

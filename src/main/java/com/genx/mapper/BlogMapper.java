@@ -8,13 +8,13 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface BlogMapper {
 
-    @Mapping(target = "blogId", source = "blogId")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "authorName", source = "createdBy.fullName")
     @Mapping(target = "viewCount", source = "viewCount")
     @Mapping(target = "content", source = "content")
     BlogResponseDto toResponseDto(Blog blog);
 
-    @Mapping(target = "blogId", ignore = true)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "slug", source = "title", qualifiedByName = "generateSlug")

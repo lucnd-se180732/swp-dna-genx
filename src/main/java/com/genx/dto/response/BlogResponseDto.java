@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class BlogResponseDto {
-    private Long blogId;
+    private Long id;
     private String title;
     private String content;
     private String shortDescription;
