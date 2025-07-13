@@ -55,5 +55,6 @@ public interface BookingMapper {
     @Mapping(target = "serviceTypeName", source = "service.name")
     @Mapping(target = "customerName", source = "customer.user.fullName")
     @Mapping(target = "avatar", source = "customer.avatar")
+    @Mapping(source = "paymentStatus", target = "paymentStatus")
     BookingSummaryResponse toSummary(Booking booking);
 }

@@ -4,10 +4,14 @@ import com.genx.config.VNPayConfig;
 import com.genx.dto.response.PaymentResponse;
 import com.genx.entity.Booking;
 import com.genx.entity.Payment;
+import com.genx.entity.User;
 import com.genx.enums.EPaymentStatus;
+import com.genx.enums.ERole;
 import com.genx.mapper.PaymentMapper;
 import com.genx.repository.IPaymentRepository;
 import com.genx.repository.IBookingRepository;
+import com.genx.repository.IUserRepository;
+import com.genx.service.interfaces.INotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -33,6 +37,12 @@ public class VNPayService {
     private IPaymentRepository paymentRepository;
 
     @Autowired
+    private IUserRepository userRepository;
+
+    @Autowired
+    private INotificationService notificationService;
+
+    @Autowired
     public VNPayService(VNPayConfig vnPayConfig,
                         IBookingRepository IBookingRepository,
                         IPaymentRepository IPaymentRepository,
@@ -41,6 +51,15 @@ public class VNPayService {
         this.IBookingRepository = IBookingRepository;
         this.IPaymentRepository = IPaymentRepository;
         this.paymentMapper = paymentMapper;
+    }
+
+    private void notifyRecorderStaffs(Booking booking) {
+        List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
+
+        String customerName = booking.getCustomer().getUser().getFullName();
+        String message = "Khách hàng " + customerName + " vừa thanh toán thành công đơn #" + booking.getCode();
+
+        notificationService.sendBulkNotification(staffs, "Đơn đăng ký đã thanh toán", message, booking);
     }
 
     @Transactional
@@ -91,8 +110,8 @@ public class VNPayService {
             throw new IllegalArgumentException("Booking cannot be null");
         }
         Integer participants = booking.getNumberOfParticipants();
-        if (participants == null || participants < 1) {
-            throw new IllegalArgumentException("Number of participants must be greater than 0");
+        if (participants == null || participants < 2) {
+            throw new IllegalArgumentException("Number of participants must be greater than 2");
         }
 
         Double basePrice = booking.getService().getPrice();
@@ -176,6 +195,9 @@ public class VNPayService {
             Booking booking = IBookingRepository.findById(bookingId).orElse(null);
             if (booking == null) return null;
 
+            // Di chuyển validate lên đây để sử dụng trong cả 2 trường hợp
+            boolean isValid = validatePaymentResponse(params);
+
             Optional<Payment> existing = IPaymentRepository.findByOrderId(vnp_TxnRef);
             if (existing.isPresent()) {
                 Payment payment = existing.get();
@@ -197,10 +219,19 @@ public class VNPayService {
                 }
 
                 if (changed) IPaymentRepository.save(payment);
+
+                // Cập nhật booking payment status và gửi notification
+                EPaymentStatus currentStatus = booking.getPaymentStatus();
+                booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
+                IBookingRepository.save(booking);
+
+                // Chỉ gửi notification nếu status thay đổi từ chưa PAID thành PAID
+                if (isValid && currentStatus != EPaymentStatus.PAID) {
+                    notifyRecorderStaffs(booking);
+                }
+
                 return paymentMapper.toDTO(payment);
             }
-
-            boolean isValid = validatePaymentResponse(params);
 
             Payment payment = createPayment(params);
             payment.setOrderId(vnp_TxnRef);
@@ -210,6 +241,10 @@ public class VNPayService {
             booking.setPayment(savedPayment);
             booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
             IBookingRepository.save(booking);
+
+            if (isValid) {
+                notifyRecorderStaffs(booking);
+            }
 
             return paymentMapper.toDTO(savedPayment);
         } catch (Exception e) {

@@ -60,8 +60,8 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, Pageable pageable) {
-        return bookingRepository.searchByStatusAndBookingId(status, id, pageable)
+    public Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, EPaymentStatus paymentStatus, Pageable pageable) {
+        return bookingRepository.searchByStatusAndBookingId(status, id, paymentStatus, pageable)
                 .map(bookingMapper::toSummary);
     }
 
@@ -73,8 +73,8 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public Page<BookingResponse> searchBookings(EBookingStatus status, Long bookingId, Pageable pageable) {
-        return bookingRepository.searchByStatusAndBookingId(status, bookingId, pageable)
+    public Page<BookingResponse> searchBookings(EBookingStatus status, Long bookingId, EPaymentStatus paymentStatus, Pageable pageable) {
+        return bookingRepository.searchByStatusAndBookingId(status, bookingId, paymentStatus, pageable)
                 .map(bookingMapper::toResponse);
     }
 
@@ -191,8 +191,6 @@ public class BookingServiceImpl implements IBookingService {
             savedBooking.setPayment(savedPayment);
             bookingRepository.save(savedBooking);
 
-            notifyRecorderStaffs(savedBooking);
-
             return bookingMapper.toDTO(savedBooking);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create registration: " + e.getMessage(), e);
@@ -295,15 +293,6 @@ public class BookingServiceImpl implements IBookingService {
     @Override
     public long countByPaymentStatus(EPaymentStatus status) {
         return bookingRepository.countByPaymentStatus(status);
-    }
-
-    private void notifyRecorderStaffs(Booking booking) {
-        List<User> staffs = userRepository.findAllByRole(ERole.RECORDER_STAFF);
-
-        String customerName = booking.getCustomer().getUser().getFullName();
-        String message = "Khách hàng " + customerName + " vừa tạo đơn #" + booking.getCode();
-
-        notificationService.sendBulkNotification(staffs, "Đơn đăng ký mới", message, booking);
     }
 
     private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {

@@ -4,6 +4,7 @@ import com.genx.dto.request.KitCodeRequest;
 import com.genx.dto.response.BookingResponse;
 import com.genx.dto.response.BookingSummaryResponse;
 import com.genx.enums.EBookingStatus;
+import com.genx.enums.EPaymentStatus;
 import com.genx.service.interfaces.IBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,18 +24,20 @@ public class StaffBookingController {
     public Page<BookingSummaryResponse> searchBookings(
             @RequestParam(required = false) EBookingStatus status,
             @RequestParam(required = false) Long bookingId,
+            @RequestParam(required = false) EPaymentStatus paymentStatus,
             Pageable pageable
     ) {
-        return bookingService.searchBookingSummaries(status, bookingId, pageable);
+        return bookingService.searchBookingSummaries(status, bookingId, paymentStatus, pageable);
     }
 
     @GetMapping("/all")
     public Page<BookingResponse> searchAllBookings(
             @RequestParam(required = false) EBookingStatus status,
             @RequestParam(required = false) Long bookingId,
+            @RequestParam(required = false) EPaymentStatus paymentStatus,
             Pageable pageable
     ) {
-        return bookingService.searchBookings(status, bookingId, pageable);
+        return bookingService.searchBookings(status, bookingId, paymentStatus, pageable);
     }
 
     @GetMapping("/{id}")
