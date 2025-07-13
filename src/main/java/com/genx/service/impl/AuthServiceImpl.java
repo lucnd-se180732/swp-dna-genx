@@ -157,6 +157,7 @@ public class AuthServiceImpl implements IAuthService {
         String avatar = customer != null ? customer.getAvatar() : null;
 
         return LoginResponse.builder()
+                .id(user.getId())
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())

@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
+    private Long id;
     private String phoneNumber;
     private String fullName;
     private String gender;

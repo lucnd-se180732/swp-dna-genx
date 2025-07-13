@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginResponse {
+    private Long id;
     private String username;
     private String fullName;
     private String phoneNumber;

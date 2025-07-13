@@ -18,13 +18,13 @@ import java.util.Optional;
 public interface IBookingService {
     Page<BookingResponse> getAllBookings(Pageable pageable);
 
-    Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, Pageable pageable);
+    Page<BookingSummaryResponse> searchBookingSummaries(EBookingStatus status, Long id, EPaymentStatus paymentStatus, Pageable pageable);
 
     BookingResponse getBookingById(Long id);
 
     BookingResponse confirmBooking(Long id);
 
-    Page<BookingResponse> searchBookings(EBookingStatus status, Long id, Pageable pageable);
+    Page<BookingResponse> searchBookings(EBookingStatus status, Long id, EPaymentStatus paymentStatus, Pageable pageable);
 
     Booking getFullRegistrationById(Long id);
 

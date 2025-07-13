@@ -25,10 +25,12 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
     SELECT b FROM Booking b
     WHERE (:status IS NULL OR b.status = :status)
       AND (:bookingId IS NULL OR b.id = :bookingId)
+      AND (:paymentStatus IS NULL OR b.paymentStatus = :paymentStatus)
 """)
     Page<Booking> searchByStatusAndBookingId(
             @Param("status") EBookingStatus status,
             @Param("bookingId") Long bookingId,
+            @Param("paymentStatus") EPaymentStatus paymentStatus,
             Pageable pageable
     );
 
