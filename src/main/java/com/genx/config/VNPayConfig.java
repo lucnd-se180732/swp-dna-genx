@@ -1,11 +1,13 @@
 package com.genx.config;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Component
 @PropertySource("classpath:application.properties")
+@Getter
 public class VNPayConfig {
 
     @Value("${vnpay.tmnCode}")
@@ -19,10 +21,4 @@ public class VNPayConfig {
 
     @Value("${vnpay.returnUrl}")
     private String returnUrl;
-
-    public String getTmnCode() { return tmnCode; }
-    public String getHashSecret() { return hashSecret; }
-    public String getPayUrl() { return payUrl; }
-    public String getReturnUrl() { return returnUrl; }
-
 }

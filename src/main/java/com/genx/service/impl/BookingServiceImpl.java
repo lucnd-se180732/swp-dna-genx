@@ -280,21 +280,6 @@ public class BookingServiceImpl implements IBookingService {
                 .map(bookingMapper::toDTO);
     }
 
-    @Override
-    public Optional<Long> getTodayRevenue(EPaymentStatus status) {
-        return bookingRepository.sumTodayRevenue(status);
-    }
-
-    @Override
-    public Optional<Long> getMonthlyRevenue(EPaymentStatus status, int month, int year) {
-        return bookingRepository.sumMonthlyRevenue(status, month, year);
-    }
-
-    @Override
-    public long countByPaymentStatus(EPaymentStatus status) {
-        return bookingRepository.countByPaymentStatus(status);
-    }
-
     private void notifyCustomerBookingConfirmed(User customerUser, Booking booking) {
         String message = String.format("Đơn đăng ký #%s của bạn đã được xác nhận. ", booking.getCode());
         notificationService.sendNotification(customerUser, "Đơn đã được xác nhận", message, booking);

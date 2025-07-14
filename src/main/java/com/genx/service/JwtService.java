@@ -107,20 +107,20 @@ public class JwtService {
     }
 
     public RefreshToken createRefreshToken(User user) {
-        String tokenStr = generateRefreshToken(user.getUsername(), user.getRole().name());
-        saveOrUpdateRefreshToken(user, tokenStr);
-        return refreshTokenRepository.findByUser(user).orElseThrow(() ->
-                new RuntimeException("Không tìm thấy refresh token sau khi tạo"));
-    }
+        if (user == null || user.getUsername() == null || user.getRole() == null) {
+            throw new IllegalArgumentException("Invalid user data");
+        }
 
-    public void saveOrUpdateRefreshToken(User user, String refreshTokenStr) {
+        String tokenStr = generateRefreshToken(user.getUsername(), user.getRole().name());
+
         RefreshToken token = refreshTokenRepository.findByUser(user)
-                .orElse(new RefreshToken());
+            .orElse(new RefreshToken());
 
         token.setUser(user);
-        token.setRefreshToken(refreshTokenStr);
+        token.setRefreshToken(tokenStr);
         token.setExpiryDate(Instant.now().plusSeconds(jwtConfig.getRefreshExpiration() / 1000));
-        refreshTokenRepository.save(token);
+
+        return refreshTokenRepository.save(token);
     }
 
     public String generateAccessToken(String email) {

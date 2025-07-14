@@ -58,7 +58,7 @@ public class AuthController {
     @GetMapping("/callback")
     public ResponseEntity<Void> googleCallback(@RequestParam("code") String code,
                                                HttpServletResponse httpResponse) throws IOException, IOException {
-        LoginResponse response = authService.loginWithGoogle(code); // bước 2 và 3 dưới
+        LoginResponse response = authService.loginWithGoogle(code);
 
         Cookie refreshCookie = new Cookie("refreshToken", response.getRefreshToken());
         refreshCookie.setHttpOnly(true);

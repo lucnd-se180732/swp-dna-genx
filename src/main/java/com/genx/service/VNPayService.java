@@ -195,7 +195,6 @@ public class VNPayService {
             Booking booking = IBookingRepository.findById(bookingId).orElse(null);
             if (booking == null) return null;
 
-            // Di chuyển validate lên đây để sử dụng trong cả 2 trường hợp
             boolean isValid = validatePaymentResponse(params);
 
             Optional<Payment> existing = IPaymentRepository.findByOrderId(vnp_TxnRef);
@@ -220,12 +219,10 @@ public class VNPayService {
 
                 if (changed) IPaymentRepository.save(payment);
 
-                // Cập nhật booking payment status và gửi notification
                 EPaymentStatus currentStatus = booking.getPaymentStatus();
                 booking.setPaymentStatus(isValid ? EPaymentStatus.PAID : EPaymentStatus.FAILED);
                 IBookingRepository.save(booking);
 
-                // Chỉ gửi notification nếu status thay đổi từ chưa PAID thành PAID
                 if (isValid && currentStatus != EPaymentStatus.PAID) {
                     notifyRecorderStaffs(booking);
                 }

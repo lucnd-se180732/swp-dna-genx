@@ -59,19 +59,16 @@ public class SecurityConfig {
 
                         .requestMatchers("/ws/**").permitAll()
 
-                        // Nhưng bắt buộc xác thực để gửi/nhận message
                         .requestMatchers("/topic/**", "/queue/**", "/user/**").authenticated()
 
-                        // Chat + Room APIs
+
                         .requestMatchers("/api/v1/rooms/**", "/app/**")
                         .hasAnyRole("CUSTOMER", "RECORDER_STAFF")
 
-                        // Logout, notification
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/notifications/**")
                         .access(hasAnyRole("CUSTOMER", "RECORDER_STAFF", "LAB_STAFF", "ADMIN"))
 
-                        // Role-based APIs
                         .requestMatchers("/api/v1/staff/**", "/api/staff/dashboard").hasRole("RECORDER_STAFF")
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/adn-results/**").hasRole("LAB_STAFF")

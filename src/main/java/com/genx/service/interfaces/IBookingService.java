@@ -52,10 +52,4 @@ public interface IBookingService {
             Pageable pageable
     );
 
-
-    Optional<Long> getTodayRevenue(EPaymentStatus status);
-
-    Optional<Long> getMonthlyRevenue(EPaymentStatus status, int month, int year);
-
-    long countByPaymentStatus(EPaymentStatus status);
 }

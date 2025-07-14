@@ -47,9 +47,9 @@ public class AdminAccountInitializer implements CommandLineRunner {
             admin.setAuthProvider(EAuthProvider.SYSTEM);
 
             userRepository.save(admin);
-            System.out.println("✅ Admin account created.");
+            System.out.println("Admin account created.");
         } else {
-            System.out.println("ℹ️ Admin already exists.");
+            System.out.println("Admin already exists.");
         }
     }
 
@@ -71,9 +71,9 @@ public class AdminAccountInitializer implements CommandLineRunner {
             staff.setStaffInfo(info);
 
             userRepository.save(staff);
-            System.out.printf("✅ %s account created: %s%n", role.name(), username);
+            System.out.printf("%s account created: %s%n", role.name(), username);
         } else {
-            System.out.printf("ℹ️ %s account already exists: %s%n", role.name(), username);
+            System.out.printf("%s account already exists: %s%n", role.name(), username);
         }
     }
 }

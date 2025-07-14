@@ -77,8 +77,8 @@ public class AdnResultServiceImpl implements IAdnResultService {
         User customer = booking.getCustomer().getUser();
         String title = "Mã tra cứu kết quả ADN đã sẵn sàng";
         String message = "Mã tra cứu: " + saved.getTrackingCode() +
-                "\n➡️ Mật khẩu: " + trackingPasswordPlain +
-                "\n📦 Mã hồ sơ (booking): " + booking.getCode() +
+                "\n Mật khẩu: " + trackingPasswordPlain +
+                "\n Mã hồ sơ (booking): " + booking.getCode() +
                 "\nBạn có thể dùng thông tin này để xem kết quả xét nghiệm ADN của bạn.";
 
         notificationService.sendNotification(customer, title, message, booking);
@@ -128,7 +128,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         Font headerFont = new Font(baseFont, 12, Font.BOLD);
         Font normalFont = new Font(baseFont, 11);
 
-        // Header
         Paragraph govTitle = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", headerFont);
         govTitle.setAlignment(Element.ALIGN_CENTER);
         document.add(govTitle);
@@ -266,7 +265,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
         Booking booking = result.getBooking();
         User customer = booking.getCustomer().getUser();
 
-        String message = "🔁 Gửi lại mã tra cứu ADN:\n" +
+        String message = " Gửi lại mã tra cứu ADN:\n" +
                 "Mã tra cứu: *" + result.getTrackingCode() + "*\n" +
                 "Mật khẩu: *" + decryptedPassword + "*\n" +
                 "Vui lòng sử dụng thông tin trên để tra cứu kết quả xét nghiệm.";
