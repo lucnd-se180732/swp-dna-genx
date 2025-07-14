@@ -22,7 +22,6 @@ public class AdminServiceController {
 
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResponseDto> createService(@RequestBody ServiceRequestDto dto) {
         return ResponseEntity.ok(serviceService.createService(dto));
     }
@@ -39,20 +38,17 @@ public class AdminServiceController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResponseDto> update(@PathVariable Long id, @RequestBody ServiceRequestDto dto) {
         return ResponseEntity.ok(serviceService.updateService(id, dto));
     }
 
     @PutMapping("/{id}/enabled")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> toggleEnabled(@PathVariable Long id, @RequestParam boolean enabled) {
         serviceService.toggleEnabled(id, enabled);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         serviceService.deleteService(id);
         return ResponseEntity.noContent().build();

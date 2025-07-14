@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,10 +53,13 @@ public class SecurityConfig {
                                 "/api/adn-results/export/{bookingId}",
                                 "/api/blogs",
                                 "/api/blogs/all",
-                                "/api/blogs/{id:[\\d]+}",
-                                "/api/services/**"
-                        ).permitAll()
+                                "/api/blogs/{id:[\\d]+}"
 
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/services/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/services/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/services/**").hasRole("ADMIN")
 
                         .requestMatchers("/ws/**").permitAll()
 

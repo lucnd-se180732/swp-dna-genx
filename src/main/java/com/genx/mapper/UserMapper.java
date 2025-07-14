@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-
+    @Mapping(target = "id", source = "id")
     @Mapping(source = "staffInfo.avatar", target = "avatar")
     @Mapping(source = "staffInfo.fingerprintImageUrl", target = "fingerprintImageUrl")
     @Mapping(source = "staffInfo.startDate", target = "startDate")
