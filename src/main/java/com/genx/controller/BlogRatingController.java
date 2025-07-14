@@ -37,7 +37,6 @@ public class BlogRatingController {
     }
 
     @GetMapping("/{blogId}/ratings-stats")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BlogRatingStatsResponseDto> getRatingStats(@PathVariable Long blogId) {
         return ResponseEntity.ok(blogRatingService.getAdminBlogRatingStats(blogId));
     }

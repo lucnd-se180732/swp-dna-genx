@@ -27,7 +27,6 @@ public class BlogController {
     private final IUserService userService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BlogResponseDto> create(@RequestBody BlogRequestDto dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -47,13 +46,11 @@ public class BlogController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BlogResponseDto> update(@PathVariable Long id, @RequestBody BlogRequestDto dto) {
         return ResponseEntity.ok(blogService.updateBlog(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         blogService.deleteBlog(id);
         return ResponseEntity.noContent().build();

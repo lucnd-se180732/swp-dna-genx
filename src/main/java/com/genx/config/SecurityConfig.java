@@ -50,10 +50,7 @@ public class SecurityConfig {
                                 "/api/blogs/**",
                                 "/payment-result",
                                 "/api/vnpay/vnpay-return",
-                                "/api/adn-results/export/{bookingId}",
-                                "/api/blogs",
-                                "/api/blogs/all",
-                                "/api/blogs/{id:[\\d]+}"
+                                "/api/adn-results/export/{bookingId}"
 
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
@@ -83,18 +80,12 @@ public class SecurityConfig {
                         ).hasRole("CUSTOMER")
 
 
-                        .requestMatchers(
-                                "/api/blogs",
-                                "/api/blogs/all",
-                                "/api/blogs/{id:[\\d]+}"
-                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/all", "/api/blogs/{id:[\\d]+}").permitAll()
                         .requestMatchers("/api/registrations/**", "/api/v1/customer/sample-collection/**", "/api/vnpay/**").hasRole("CUSTOMER")
 
-                        .requestMatchers(
-                                "/api/blogs",
-                                "/api/blogs/{id:[\\d]+}"
-                        ).hasRole("ADMIN")
-
+                        .requestMatchers(HttpMethod.POST, "/api/blogs/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/blogs/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/blogs/**").hasRole("ADMIN")
                         .requestMatchers("/api/blogs/rate").hasRole("CUSTOMER")
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
