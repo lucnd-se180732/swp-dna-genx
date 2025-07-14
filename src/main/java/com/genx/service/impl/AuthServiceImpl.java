@@ -150,8 +150,7 @@ public class AuthServiceImpl implements IAuthService {
 
     private LoginResponse buildLoginResponse(User user) {
         String accessToken = jwtService.generateToken(user.getUsername(), user.getRole().name());
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), user.getRole().name());
-        jwtService.saveOrUpdateRefreshToken(user, refreshToken);
+        RefreshToken refreshToken = jwtService.createRefreshToken(user);
 
         Customer customer = customerRepository.findByUser(user).orElse(null);
         String avatar = customer != null ? customer.getAvatar() : null;
@@ -162,7 +161,7 @@ public class AuthServiceImpl implements IAuthService {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshToken.getRefreshToken())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .avatar(avatar)
@@ -213,7 +212,7 @@ public class AuthServiceImpl implements IAuthService {
 
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
             Long userId = userDetails.getUser().getId();
-            int deleted = refreshTokenRepository.deleteByUserId(userId); // nên có return
+            int deleted = refreshTokenRepository.deleteByUserId(userId);
             SecurityContextHolder.clearContext();
 
             if (deleted == 0) {
@@ -231,7 +230,7 @@ public class AuthServiceImpl implements IAuthService {
                 throw new CustomException("Refresh token không hợp lệ", 400);
             }
 
-            String subject = claims.getSubject(); // có thể là username hoặc email
+            String subject = claims.getSubject();
             User user = userRepository.findByUsernameOrEmail(subject)
                     .orElseThrow(() -> new CustomException("User không tồn tại", 404));
 

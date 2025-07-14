@@ -45,7 +45,6 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
         long totalPayments = bookingRepository.countByPaymentStatus(EPaymentStatus.PAID);
         long totalRevenue = paymentRepository.sumSuccessfulPaymentAmount().orElse(0L);
 
-        // Doanh thu hôm nay và theo tháng từ Booking
         long todayRevenue = bookingRepository
                 .sumTodayRevenue(EPaymentStatus.PAID)
                 .orElse(0L);

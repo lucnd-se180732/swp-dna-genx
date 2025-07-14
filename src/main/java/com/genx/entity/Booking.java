@@ -70,7 +70,7 @@ public class Booking extends BaseEntity {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
-    @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private SampleCollection sampleCollection;
 
     @PrePersist

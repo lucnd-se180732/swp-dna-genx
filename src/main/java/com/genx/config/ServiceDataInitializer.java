@@ -60,9 +60,9 @@ public class ServiceDataInitializer implements CommandLineRunner {
             );
 
             serviceRepository.saveAll(services);
-            System.out.println("✅ Sample services inserted.");
+            System.out.println("Sample services inserted.");
         } else {
-            System.out.println("ℹ️ Services already exist.");
+            System.out.println("Services already exist.");
         }
 
 
@@ -74,9 +74,9 @@ public class ServiceDataInitializer implements CommandLineRunner {
                     .lastUpdated(LocalDateTime.now())
                     .build();
             kitStockRepository.save(stock);
-            System.out.println("✅ Kit stock initialized.");
+            System.out.println("Kit stock initialized.");
         } else {
-            System.out.println("ℹ️ Kit stock already exists.");
+            System.out.println("Kit stock already exists.");
         }
     }
 

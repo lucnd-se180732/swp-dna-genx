@@ -2,7 +2,6 @@ package com.genx.controller;
 
 import com.genx.dto.response.ApiResponse;
 import com.genx.service.interfaces.IEmailService;
-import com.genx.service.interfaces.IOTPService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

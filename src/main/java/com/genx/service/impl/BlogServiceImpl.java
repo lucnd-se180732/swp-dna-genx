@@ -59,10 +59,10 @@ public class BlogServiceImpl implements IBlogService {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Blog not found with id: " + id));
 
-        blog.setViewCount(blog.getViewCount() + 1); // Tăng lượt xem
-        blogRepository.save(blog); // Lưu lại
+        blog.setViewCount(blog.getViewCount() + 1);
+        blogRepository.save(blog);
 
-        return blogMapper.toResponseDto(blog); // Trả về DTO đã có viewCount
+        return blogMapper.toResponseDto(blog);
     }
 
 
