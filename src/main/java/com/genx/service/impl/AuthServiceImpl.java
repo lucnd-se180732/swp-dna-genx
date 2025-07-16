@@ -191,15 +191,15 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public LoginResponse refreshAccessToken(String refreshToken) {
         RefreshToken token = refreshTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ"));
+                .orElseThrow(() -> new CustomException("Refresh token không hợp lệ", 401));
 
         if (jwtService.isRefreshTokenExpired(refreshToken))
-            throw new RuntimeException("Refresh token đã hết hạn");
+            throw new CustomException("Refresh token đã hết hạn", 401);
 
         User user = token.getUser();
 
         if (!user.isEnabled() || !user.isAccountNonLocked())
-            throw new RuntimeException("Tài khoản bị vô hiệu hóa hoặc khóa");
+            throw new CustomException("Tài khoản bị vô hiệu hóa hoặc khóa", 403);
 
         return buildLoginResponse(user);
     }

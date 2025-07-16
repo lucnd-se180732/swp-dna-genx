@@ -104,9 +104,18 @@ public class AuthController {
 
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(@CookieValue("refreshToken") String refreshToken) {
-        LoginResponse response = authService.refreshAccessToken(refreshToken);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LoginResponse> refresh(@CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
+        LoginResponse loginResponse = authService.refreshAccessToken(refreshToken);
+
+        Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(secureCookie);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(refreshTokenExpiration / 1000);
+
+        response.addCookie(refreshCookie);
+
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PostMapping("/logout")

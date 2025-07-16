@@ -143,6 +143,18 @@ public class UserServiceImpl implements IUserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == ERole.CUSTOMER) {
+            Customer customer = customerRepository.findByUserId(id);
+            if (customer != null) {
+                customerRepository.delete(customer);
+            }
+        }
+        if (user.getRole().name().contains("STAFF")) {
+            StaffInfo staffInfo = staffInfoRepository.findByUserId(id);
+            if (staffInfo != null) {
+                staffInfoRepository.delete(staffInfo);
+            }
+        }
         userRepository.delete(user);
     }
 

@@ -48,17 +48,13 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        try {
+    public void  validateToken(String token) {
+
             SecretKey key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     public String getUsernameFromToken(String token) {
@@ -74,7 +70,7 @@ public class JwtService {
 
     public String generateRefreshToken(String username, String role) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshExpiration()); // ví dụ: 30 ngày
+        Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshExpiration());
 
         SecretKey key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
 

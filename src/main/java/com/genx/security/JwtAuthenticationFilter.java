@@ -35,18 +35,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("JWT Filter triggered - path: " + path);
         System.out.println("Token received: " + token);
 
-        if (token != null && jwtService.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            String username = jwtService.getUsernameFromToken(token);
-            System.out.println("JWT username: " + username);
-            CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
-            System.out.println("User role: " + userDetails.getUser().getRole());
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//        if (token != null && jwtService.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+//            String username = jwtService.getUsernameFromToken(token);
+//            System.out.println("JWT username: " + username);
+//            CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+//            System.out.println("User role: " + userDetails.getUser().getRole());
+//            UsernamePasswordAuthenticationToken authentication =
+//                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//        }
+//
+//        filterChain.doFilter(request, response);
+        try {
+            if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                jwtService.validateToken(token);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                String username = jwtService.getUsernameFromToken(token);
+                CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access token expired");
+        } catch (io.jsonwebtoken.JwtException ex) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String extractToken(HttpServletRequest request) {
