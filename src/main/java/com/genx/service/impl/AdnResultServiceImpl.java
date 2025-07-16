@@ -113,6 +113,7 @@ public class AdnResultServiceImpl implements IAdnResultService {
         return result;
     }
 
+
     public byte[] exportResultToPdf(Long bookingId) throws Exception {
         AdnResult result = adnResultRepository.findByBooking_Id(bookingId)
                 .orElseThrow(() -> new RuntimeException("Result not found"));
@@ -124,10 +125,11 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.open();
 
         BaseFont baseFont = BaseFont.createFont("fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-        Font titleFont = new Font(baseFont, 16, Font.BOLD);
+        Font titleFont = new Font(baseFont, 12, Font.ITALIC);
         Font headerFont = new Font(baseFont, 12, Font.BOLD);
         Font normalFont = new Font(baseFont, 11);
 
+        // --- Tiêu đề ---
         Paragraph govTitle = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", headerFont);
         govTitle.setAlignment(Element.ALIGN_CENTER);
         document.add(govTitle);
@@ -142,18 +144,28 @@ public class AdnResultServiceImpl implements IAdnResultService {
         mainTitle.setSpacingAfter(20f);
         document.add(mainTitle);
 
-        // Representative info
+        // --- Thông tin khách ---
         document.add(new Paragraph("THÔNG TIN NGƯỜI ĐẠI DIỆN", headerFont));
         document.add(new Paragraph("Họ tên: " + booking.getCustomer().getUser().getFullName(), normalFont));
         document.add(new Paragraph("Số điện thoại: " + booking.getPhoneNumber(), normalFont));
         document.add(new Paragraph("Email: " + booking.getEmail(), normalFont));
-        document.add(new Paragraph("Ngày hẹn: " + (booking.getAppointmentDate() != null ? booking.getAppointmentDate().toString() : "Không rõ"), normalFont));
-        document.add(Chunk.NEWLINE);
+        String collectionMethod = booking.getCollectionMethod().name();
+        if( collectionMethod.equalsIgnoreCase("HOSPITAL") ) {
+            document.add(new Paragraph("Ngày hẹn: " +
+                    (booking.getAppointmentDate() != null ? booking.getAppointmentDate().toString() : "Không rõ"), normalFont));
+            document.add(Chunk.NEWLINE);
+        }
 
         String caseType = booking.getService().getCaseType().name();
+        if(caseType.equalsIgnoreCase("CIVIL")){
+            caseType="Dân sự";
+        }else if(caseType.equalsIgnoreCase("ADMINISTRATIVE")) {
+            caseType = "Hành chính";
+        }
         document.add(new Paragraph("Loại hồ sơ: " + (caseType != null ? caseType : "Không rõ"), normalFont));
         document.add(Chunk.NEWLINE);
 
+        // --- Danh sách người tham gia ---
         document.add(new Paragraph("DANH SÁCH NGƯỜI THAM GIA", headerFont));
         PdfPTable participantTable;
         if ("ADMINISTRATIVE".equalsIgnoreCase(caseType)) {
@@ -203,33 +215,103 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(participantTable);
         document.add(Chunk.NEWLINE);
 
+        // --- Kết quả theo locus ---
         document.add(new Paragraph("KẾT QUẢ XÉT NGHIỆM (THEO LOCUS)", headerFont));
-        PdfPTable lociTable = new PdfPTable(2);
+        List<Participant> participants = booking.getParticipants();
+        int participantCount = participants.size();
+
+        PdfPTable lociTable = new PdfPTable(1 + participantCount);
         lociTable.setWidthPercentage(100);
         lociTable.setSpacingBefore(10f);
+
         lociTable.addCell("Locus");
-        lociTable.addCell(new Phrase("Kết quả", normalFont));
+        for (Participant p : participants) {
+            lociTable.addCell(new Phrase(p.getFullName(), normalFont));
+        }
 
         for (var entry : result.getLociResults().entrySet()) {
             lociTable.addCell(entry.getKey());
-            lociTable.addCell(entry.getValue());
+            String[] values = entry.getValue().split(",");
+            for (int i = 0; i < participantCount; i++) {
+                lociTable.addCell(i < values.length ? values[i] : "");
+            }
         }
-
         document.add(lociTable);
         document.add(Chunk.NEWLINE);
 
+        // --- Kết luận ---
         Paragraph conclusion = new Paragraph("KẾT LUẬN:", headerFont);
         conclusion.setSpacingBefore(15f);
         document.add(conclusion);
+
 
         Paragraph conclusionText = new Paragraph(result.getConclusion().toUpperCase(), titleFont);
         conclusionText.setSpacingBefore(5f);
         conclusionText.setAlignment(Element.ALIGN_LEFT);
         document.add(conclusionText);
 
+
+
+        // ẢNH chữ ký và con dấu
+
+
+        // ==== CHỮ KÝ + CON DẤU VÀ TIÊU ĐỀ ====
+        Paragraph signTitle = new Paragraph(" ", normalFont); // khoảng trắng
+        signTitle.setSpacingBefore(25f);
+        document.add(signTitle);
+
+// Tiêu đề cho 3 cột: Hội đồng - Giám đốc - Công ty
+        PdfPTable titleTable = new PdfPTable(3);
+        titleTable.setWidthPercentage(100);
+        titleTable.setSpacingAfter(5f);
+
+        PdfPCell cellTitle1 = new PdfPCell(new Phrase("HỘI ĐỒNG KHOA HỌC", headerFont));
+        PdfPCell cellTitle2 = new PdfPCell(new Phrase("GIÁM ĐỐC CÔNG TY", headerFont));
+        PdfPCell cellTitle3 = new PdfPCell(new Phrase("CÔNG TY CHỊU TRÁCH NHIỆM", headerFont));
+
+        for (PdfPCell cell : List.of(cellTitle1, cellTitle2, cellTitle3)) {
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setBorder(Rectangle.NO_BORDER);
+        }
+        titleTable.addCell(cellTitle1);
+        titleTable.addCell(cellTitle2);
+        titleTable.addCell(cellTitle3);
+        document.add(titleTable);
+
+// Chèn ảnh chữ ký + con dấu
+        Image sign1 = Image.getInstance("src/main/resources/images/sign_vu.png");
+        Image sign2 = Image.getInstance( "src/main/resources/images/sign_huy.png");
+        Image redStamp = Image.getInstance("src/main/resources/images/stamp_red.png");
+
+        float imageWidth = 120f;
+        float imageHeight = 50f;
+
+        sign1.scaleToFit(imageWidth, imageHeight);
+        sign2.scaleToFit(imageWidth, imageHeight);
+        redStamp.scaleToFit(imageWidth, imageHeight);
+
+        PdfPCell cell1 = new PdfPCell(sign1, true);
+        PdfPCell cell2 = new PdfPCell(sign2, true);
+        PdfPCell cell3 = new PdfPCell(redStamp, true);
+
+        for (PdfPCell cell : List.of(cell1, cell2, cell3)) {
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setBorder(Rectangle.NO_BORDER);
+        }
+
+        PdfPTable signTable = new PdfPTable(3);
+        signTable.setWidthPercentage(100);
+        signTable.setSpacingBefore(5f);
+        signTable.addCell(cell1);
+        signTable.addCell(cell2);
+        signTable.addCell(cell3);
+
+        document.add(signTable);
+
         document.close();
         return out.toByteArray();
     }
+
 
 
     @Override
