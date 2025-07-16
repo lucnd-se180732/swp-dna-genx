@@ -7,6 +7,7 @@ import com.genx.dto.response.BlogResponseDto;
 import com.genx.entity.BlogRate.Blog;
 import com.genx.entity.User;
 import com.genx.mapper.BlogMapper;
+import com.genx.repository.BlogRatingRepository;
 import com.genx.repository.BlogRepository;
 import com.genx.repository.IUserRepository;
 import com.genx.service.interfaces.IBlogService;
@@ -15,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +36,9 @@ public class BlogServiceImpl implements IBlogService {
 
     @Autowired
     private final BlogMapper blogMapper;
+
+    @Autowired
+    private final BlogRatingRepository blogRatingRepository;
 
     @Override
     public BlogResponseDto createBlog(BlogRequestDto dto, Long userId) {
@@ -87,11 +93,14 @@ public class BlogServiceImpl implements IBlogService {
         return blogMapper.toResponseDto(blogRepository.save(blog));
     }
 
+    @Transactional
     @Override
     public void deleteBlog(Long id) {
+        System.out.println("🔍 Start deleteBlog ID = " + id);
         if (!blogRepository.existsById(id)) {
-            throw new RuntimeException("Blog not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found");
         }
+        blogRatingRepository.deleteByBlog_Id(id);
         blogRepository.deleteById(id);
     }
 
