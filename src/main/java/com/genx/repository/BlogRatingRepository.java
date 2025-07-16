@@ -17,4 +17,6 @@ public interface BlogRatingRepository extends JpaRepository<BlogRating, Long> {
     List<BlogRating> findByBlog(Blog blog);
 
     List<BlogRating> findAllByBlog_Id(Long blogId);
+
+    void deleteByBlog_Id(Long blogId);
 }
