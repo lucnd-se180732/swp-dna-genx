@@ -6,7 +6,6 @@ import com.genx.repository.IBookingRepository;
 import com.genx.service.interfaces.IAdminDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,11 +25,10 @@ public class AdminDashboardController {
 
 
     @GetMapping("/revenue")
-    public ResponseEntity<Map<String, Long>> getMonthlyRevenue(
-            @RequestParam int month,
-            @RequestParam int year
-    ) {
-        Long revenue = dashboardService.getMonthlyRevenue(month, year);
-        return ResponseEntity.ok(Map.of("monthlyRevenue", revenue));
+    public ResponseEntity<Long> getRevenueByExacDate(@RequestParam(required = false) Integer day,
+                                           @RequestParam(required = false) Integer month,
+                                           @RequestParam(required = false) Integer year) {
+        Long revenue = dashboardService.getRevenueByExacDate(day, month, year);
+        return ResponseEntity.ok(revenue);
     }
 }

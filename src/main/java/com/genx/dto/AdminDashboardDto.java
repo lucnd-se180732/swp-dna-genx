@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 public class AdminDashboardDto {
-
     private long totalUsers;
     private long totalStaff;
     private long totalCustomers;
@@ -20,7 +19,5 @@ public class AdminDashboardDto {
     private long totalBlogs;
     private long totalPayments;
     private long totalRevenue;
-    private long todayRevenue;
-    private long monthlyRevenue;
 
 }

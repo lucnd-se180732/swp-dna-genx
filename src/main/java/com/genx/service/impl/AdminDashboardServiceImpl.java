@@ -7,7 +7,6 @@ import com.genx.mapper.BookingMapper;
 import com.genx.repository.*;
 import com.genx.service.interfaces.IAdminDashboardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,22 +16,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminDashboardServiceImpl implements IAdminDashboardService {
 
-    @Autowired
     private final IUserRepository userRepository;
-
-    @Autowired
     private final IServiceRepository serviceRepository;
-
-    @Autowired
     private final BlogRepository blogRepository;
-
-    @Autowired
     private final IPaymentRepository paymentRepository;
-
-    @Autowired
     private final IBookingRepository bookingRepository;
-
-    @Autowired
     private final BookingMapper bookingMapper;
 
     @Override
@@ -45,15 +33,6 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
         long totalPayments = bookingRepository.countByPaymentStatus(EPaymentStatus.PAID);
         long totalRevenue = paymentRepository.sumSuccessfulPaymentAmount().orElse(0L);
 
-        long todayRevenue = bookingRepository
-                .sumTodayRevenue(EPaymentStatus.PAID)
-                .orElse(0L);
-
-        LocalDate now = LocalDate.now();
-        long monthlyRevenue = bookingRepository
-                .sumMonthlyRevenue(EPaymentStatus.PAID, now.getMonthValue(), now.getYear())
-                .orElse(0L);
-
         return new AdminDashboardDto(
                 totalUsers,
                 totalStaff,
@@ -61,15 +40,36 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
                 totalServices,
                 totalBlogs,
                 totalPayments,
-                totalRevenue,
-                todayRevenue,
-                monthlyRevenue
+                totalRevenue
         );
     }
 
     @Override
-    public Long getMonthlyRevenue(int month, int year) {
-        return bookingRepository.sumMonthlyRevenue(EPaymentStatus.PAID, month, year)
-                .orElse(0L);
+    public Long getRevenueByExacDate(Integer day, Integer month, Integer year) {
+        EPaymentStatus status = EPaymentStatus.PAID;
+        if (day == null && month == null && year == null) {
+            LocalDate today = LocalDate.now();
+            return bookingRepository.sumRevenueByExactDate(
+                    status,
+                    today.getDayOfMonth(),
+                    today.getMonthValue(),
+                    today.getYear()
+            ).orElse(0L);
+        }
+
+        if (day != null && month != null && year != null) {
+            return bookingRepository.sumRevenueByExactDate(status, day, month, year).orElse(0L);
+        }
+
+
+        if (day == null && month != null && year != null) {
+            return bookingRepository.sumRevenueByMonthAndYear(status, month, year).orElse(0L);
+        }
+
+        if (day == null && month == null && year != null) {
+            return bookingRepository.sumRevenueByYear(status, year).orElse(0L);
+        }
+
+        return 0L;
     }
 }

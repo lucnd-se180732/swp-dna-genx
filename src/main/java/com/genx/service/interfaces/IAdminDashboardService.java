@@ -4,5 +4,6 @@ import com.genx.dto.AdminDashboardDto;
 
 public interface IAdminDashboardService {
     AdminDashboardDto getDashboardData();
-    Long getMonthlyRevenue(int month, int year);
+
+    Long getRevenueByExacDate(Integer day, Integer month, Integer year);
 }

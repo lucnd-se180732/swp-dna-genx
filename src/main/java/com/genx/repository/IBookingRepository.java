@@ -60,13 +60,22 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findTop5ByOrderByCreatedAtDesc();
 
 
-    @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND DATE(b.createdAt) = CURRENT_DATE")
-    Optional<Long> sumTodayRevenue(@Param("status") EPaymentStatus status);
+
+
+    @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND YEAR(b.createdAt) = :year AND MONTH(b.createdAt) = :month AND DAY(b.createdAt) = :day")
+    Optional<Long> sumRevenueByExactDate(@Param("status") EPaymentStatus status,
+                                         @Param("day") int day,
+                                         @Param("month") int month,
+                                         @Param("year") int year);
 
     @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND MONTH(b.createdAt) = :month AND YEAR(b.createdAt) = :year")
-    Optional<Long> sumMonthlyRevenue(@Param("status") EPaymentStatus status,
-                                     @Param("month") int month,
-                                     @Param("year") int year);
+    Optional<Long> sumRevenueByMonthAndYear(@Param("status") EPaymentStatus status,
+                                            @Param("month") int month,
+                                            @Param("year") int year);
+
+    @Query("SELECT SUM(b.payment.amount) FROM Booking b WHERE b.paymentStatus = :status AND YEAR(b.createdAt) = :year")
+    Optional<Long> sumRevenueByYear(@Param("status") EPaymentStatus status,
+                                    @Param("year") int year);
 
 
     long countByPaymentStatus(EPaymentStatus status);
