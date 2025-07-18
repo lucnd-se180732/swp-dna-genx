@@ -66,7 +66,7 @@ public class AdminDashboardServiceImpl implements IAdminDashboardService {
             return bookingRepository.sumRevenueByMonthAndYear(status, month, year).orElse(0L);
         }
 
-        if (day == null && month == null && year != null) {
+        if (day == null && month == null) {
             return bookingRepository.sumRevenueByYear(status, year).orElse(0L);
         }
 

@@ -67,7 +67,6 @@ public class AuthController {
         refreshCookie.setMaxAge(refreshTokenExpiration / 1000);
 
         httpResponse.addCookie(refreshCookie);
-        // Redirect FE kèm access token
         String redirectUrl = "http://localhost:3000/oauth2/success?access_token=" + response.getAccessToken();
         httpResponse.sendRedirect(redirectUrl);
         return ResponseEntity.ok().build();
@@ -78,7 +77,6 @@ public class AuthController {
     public ResponseEntity<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = authService.loginWithGoogle(request.getCode());
 
-        // Gửi refreshToken vào cookie
         Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(secureCookie);
@@ -142,10 +140,4 @@ public class AuthController {
                         .result(true)
                         .build());
     }
-
-
-
-
-
-
 }

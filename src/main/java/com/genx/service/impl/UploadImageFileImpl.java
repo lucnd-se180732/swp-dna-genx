@@ -34,7 +34,7 @@ public class UploadImageFileImpl implements IUploadImageFile {
         String extension = parts[1];
         String publicId = UUID.randomUUID() + "_" + fileName;
 
-        log.info("▶ Uploading file: {} | publicId: {}", originalName, publicId);
+        log.info("Uploading file: {} | publicId: {}", originalName, publicId);
 
         cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                 "public_id", "avatars/" + publicId,
@@ -42,7 +42,7 @@ public class UploadImageFileImpl implements IUploadImageFile {
         ));
 
         String finalUrl = cloudinary.url().generate("avatars/" + publicId + "." + extension);
-        log.info("✅ File uploaded: {}", finalUrl);
+        log.info("File uploaded: {}", finalUrl);
         return finalUrl;
     }
 

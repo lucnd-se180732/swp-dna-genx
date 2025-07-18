@@ -129,7 +129,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         Font headerFont = new Font(baseFont, 12, Font.BOLD);
         Font normalFont = new Font(baseFont, 11);
 
-        // --- Tiêu đề ---
         Paragraph govTitle = new Paragraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", headerFont);
         govTitle.setAlignment(Element.ALIGN_CENTER);
         document.add(govTitle);
@@ -144,7 +143,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         mainTitle.setSpacingAfter(20f);
         document.add(mainTitle);
 
-        // --- Thông tin khách ---
         document.add(new Paragraph("THÔNG TIN NGƯỜI ĐẠI DIỆN", headerFont));
         document.add(new Paragraph("Họ tên: " + booking.getCustomer().getUser().getFullName(), normalFont));
         document.add(new Paragraph("Số điện thoại: " + booking.getPhoneNumber(), normalFont));
@@ -165,7 +163,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(new Paragraph("Loại hồ sơ: " + (caseType != null ? caseType : "Không rõ"), normalFont));
         document.add(Chunk.NEWLINE);
 
-        // --- Danh sách người tham gia ---
         document.add(new Paragraph("DANH SÁCH NGƯỜI THAM GIA", headerFont));
         PdfPTable participantTable;
         if ("ADMINISTRATIVE".equalsIgnoreCase(caseType)) {
@@ -215,7 +212,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(participantTable);
         document.add(Chunk.NEWLINE);
 
-        // --- Kết quả theo locus ---
         document.add(new Paragraph("KẾT QUẢ XÉT NGHIỆM (THEO LOCUS)", headerFont));
         List<Participant> participants = booking.getParticipants();
         int participantCount = participants.size();
@@ -239,7 +235,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         document.add(lociTable);
         document.add(Chunk.NEWLINE);
 
-        // --- Kết luận ---
         Paragraph conclusion = new Paragraph("KẾT LUẬN:", headerFont);
         conclusion.setSpacingBefore(15f);
         document.add(conclusion);
@@ -252,15 +247,10 @@ public class AdnResultServiceImpl implements IAdnResultService {
 
 
 
-        // ẢNH chữ ký và con dấu
-
-
-        // ==== CHỮ KÝ + CON DẤU VÀ TIÊU ĐỀ ====
         Paragraph signTitle = new Paragraph(" ", normalFont); // khoảng trắng
         signTitle.setSpacingBefore(25f);
         document.add(signTitle);
 
-// Tiêu đề cho 3 cột: Hội đồng - Giám đốc - Công ty
         PdfPTable titleTable = new PdfPTable(3);
         titleTable.setWidthPercentage(100);
         titleTable.setSpacingAfter(5f);
@@ -278,7 +268,6 @@ public class AdnResultServiceImpl implements IAdnResultService {
         titleTable.addCell(cellTitle3);
         document.add(titleTable);
 
-// Chèn ảnh chữ ký + con dấu
         Image sign1 = Image.getInstance("src/main/resources/images/sign_vu.png");
         Image sign2 = Image.getInstance( "src/main/resources/images/sign_huy.png");
         Image redStamp = Image.getInstance("src/main/resources/images/stamp_red.png");
